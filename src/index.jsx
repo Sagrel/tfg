@@ -1,8 +1,10 @@
 import { render } from "react-dom";
+import { useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
-  Route
+  Route,
+  useNavigate
 } from "react-router-dom";
 import App from "./routes/App";
 
@@ -39,6 +41,7 @@ import Register from "./routes/Register";
 import { ColorSchemeProvider, MantineProvider } from "@mantine/core";
 import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
 import { NotificationsProvider } from '@mantine/notifications';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const Index = () => {
 
@@ -52,6 +55,9 @@ const Index = () => {
   const toggleColorScheme = (value) => {
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
   }
+
+ 
+
 
   return (
     <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>

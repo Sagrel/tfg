@@ -4,8 +4,10 @@ import study from "../icons/study.png"
 import achivements from "../icons/achivements.png"
 import user from "../icons/user.png"
 import settings from "../icons/settings.png"
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AppShell, Navbar, AspectRatio, Image } from '@mantine/core';
+import { useEffect } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const App = () => {
     let icons = [study, achivements, user, settings]
@@ -14,7 +16,21 @@ const App = () => {
     // TODO make this not suck
     const navbar_width = window.innerHeight / icons.length;
 
-    
+    const navigate = useNavigate();
+    useEffect(() => {
+        
+        const auth = getAuth();
+
+        if (!auth.currentUser) {
+            navigate("login");
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (!auth.currentUser) {
+                navigate("login");
+            }
+        });
+    })
 
     return (
         <AppShell

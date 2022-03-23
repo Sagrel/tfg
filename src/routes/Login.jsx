@@ -1,11 +1,32 @@
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { TextInput, Button, Group, Box } from '@mantine/core';
 import { useNotifications } from "@mantine/notifications";
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Login = () => {
 	const notifications = useNotifications();
 	const navigate = useNavigate();
+
+	useEffect(() => {
+
+		const auth = getAuth();
+
+		if (auth.currentUser) {
+			navigate("/");
+		}
+
+		onAuthStateChanged(auth, (user) => {
+			if (user) {
+				notifications.showNotification({
+					title: "Sesión iniciada",
+					message: `Bien venido ${user.displayName}`,
+					color: "green"
+				})
+				navigate("/")
+			}
+		});
+	}, [])
 
 	return (
 		<Box sx={(theme) => ({
@@ -39,15 +60,8 @@ const Login = () => {
 						error_contraseña("La contraseña debe contener numeros")
 					} else {
 						const auth = getAuth();
+						// The navigation and notification are handeled in the useEffect
 						signInWithEmailAndPassword(auth, email, password)
-							.then((userCredential) => {
-								notifications.showNotification({
-									title: "Sesión iniciada",
-									message: `Bien venido ${userCredential.user.displayName}`,
-									color: "green"
-								})
-								navigate("/")
-							})
 							.catch((error) => {
 								const errorMessage = error.message;
 								notifications.showNotification({

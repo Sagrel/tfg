@@ -7,6 +7,7 @@ const Register = () => {
 	const notifications = useNotifications();
 
 	// TODO extract this style and the one in login to help them keep in sync
+	// They are now out off sync, Login is more complete
 	return (
 		<Box sx={{ maxWidth: "25%" }} mx="auto">
 			<form onSubmit={(e) => {
