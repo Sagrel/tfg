@@ -44,6 +44,7 @@ const Register = () => {
 									message: `Bien venido ${userCredential.user.displayName}`,
 									color: "green"
 								})
+								navigate("/")
 							})
 						})
 						.catch((error) => {
@@ -89,7 +90,7 @@ const Register = () => {
 				/>
 
 				<Group position="right" mt="md">
-					<Link to="/Login">¿Ya tienes cuenta?</Link>
+					<Link to="/login">¿Ya tienes cuenta?</Link>
 					<Button type="submit">Crear</Button>
 				</Group>
 			</form>
