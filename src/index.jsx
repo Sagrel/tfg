@@ -25,7 +25,6 @@ initializeApp(firebaseConfig);
 
 
 
-
 import Study from "./routes/Study"
 import Achivements from "./routes/Achivements"
 import User from "./routes/User"
@@ -35,9 +34,11 @@ import Create from "./routes/Create";
 import Teoria from "./routes/Teoria";
 import Reading from "./routes/Reading";
 import Error from "./routes/Error";
+import Login from "./routes/Login";
+import Register from "./routes/Register";
 import { ColorSchemeProvider, MantineProvider } from "@mantine/core";
 import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
-import { useState } from "react";
+import { NotificationsProvider } from '@mantine/notifications';
 
 const Index = () => {
 
@@ -55,21 +56,25 @@ const Index = () => {
   return (
     <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
       <MantineProvider theme={{ colorScheme: colorScheme }}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<App />}>
-              <Route path="study" element={<Study />}></Route>
-              <Route path="review/:tema" element={<Review />}></Route>
-              <Route path="teoria/:tema" element={<Teoria />}></Route>
-              <Route path="reading/:tema" element={<Reading />}></Route>
-              <Route path="achivements" element={<Achivements />}></Route>
-              <Route path="user" element={<User />}></Route>
-              <Route path="settings" element={<Settings />}></Route>
-              <Route path="create" element={<Create />}></Route>
-            </Route>
-            <Route path="*" element={<Error />}></Route>
-          </Routes>
-        </BrowserRouter>
+        <NotificationsProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="login" element={<Login />}></Route>
+              <Route path="register" element={<Register />}></Route>
+              <Route path="/" element={<App />}>
+                <Route path="study" element={<Study />}></Route>
+                <Route path="review/:tema" element={<Review />}></Route>
+                <Route path="teoria/:tema" element={<Teoria />}></Route>
+                <Route path="reading/:tema" element={<Reading />}></Route>
+                <Route path="achivements" element={<Achivements />}></Route>
+                <Route path="user" element={<User />}></Route>
+                <Route path="settings" element={<Settings />}></Route>
+                <Route path="create" element={<Create />}></Route>
+              </Route>
+              <Route path="*" element={<Error />}></Route>
+            </Routes>
+          </BrowserRouter>
+        </NotificationsProvider>
       </MantineProvider>
     </ColorSchemeProvider>
   )

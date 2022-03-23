@@ -14,7 +14,7 @@ export default function useFetch(path, dependencies = []) {
 					.finally(() => setLoading(false))
 			})
 			.catch(err => setError(err))
-	}, [])
+	}, dependencies)
 
 	return [loading, error, data]
 }
