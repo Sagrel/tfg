@@ -18,6 +18,7 @@ const Login = () => {
 
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
+				notifications.clean();
 				notifications.showNotification({
 					title: "Sesión iniciada",
 					message: `Bien venido ${user.displayName}`,
