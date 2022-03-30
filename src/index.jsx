@@ -67,6 +67,7 @@ const Index = () => {
             <Routes>
               <Route path="login" element={<Login />}></Route>
               <Route path="register" element={<Register />}></Route>
+              { /* FIXME On open redirect "/" to "/study"  */}
               <Route path="/" element={<App />}>
                 <Route path="study" element={<Study />}></Route>
                 <Route path="review/:tema" element={<Review />}></Route>

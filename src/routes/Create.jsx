@@ -1,25 +1,60 @@
 import { useState } from "react"
 
-const Create = () => {
+import { RichTextEditor } from '@mantine/rte';
+import { Button } from "@mantine/core";
 
-	const [text, setText] = useState("")
+const get_text = (html_text) => {
+	return new DOMParser()
+		.parseFromString(html_text, "text/html")
+		.documentElement.textContent;
+	// FIXME this does not account for line endings!! 
+}
+
+const get_words = (text) => {
+	const word_segmenter = new Intl.Segmenter('en-En', { granularity: 'word' });
+	const sentence_segmenter = new Intl.Segmenter('en-En', { granularity: 'sentence' })
+	const sentences = [...sentence_segmenter.segment(text)]
+	console.log(sentences)
+	const res = sentences.map((sentence) => {
+		const sentence_text = sentence.segment;
+		//let words = [...word_segmenter.segment(sentence_text)]
+		return [sentence_text, [...word_segmenter.segment(sentence_text)].filter(w => w.isWordLike).map(w => w.segment.toLowerCase())]
+	})
+	console.log(res)
+	return [...res]
+}
+
+const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
+
+
+const handleImageUpload = (file) =>
+	new Promise((resolve, reject) => {
+		const formData = new FormData();
+		formData.append('image', file);
+
+		fetch('https://api.imgbb.com/1/upload?key=' + apiKey, {
+			method: 'POST',
+			body: formData,
+		})
+			.then((response) => response.json())
+			.then((result) => resolve(result.data.url))
+			.catch(() => reject(new Error('Upload failed')));
+	});
+
+const Create = () => {
 	const [words, setWords] = useState([])
 
-
+	const [value, onChange] = useState("Put something here");
 	return (
 		<div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
 			<h2>Introduce el texto</h2>
-			<textarea defaultValue={text} rows={20} onChangeCapture={(e) => {				
-				setText(e.target.value)
-
-				const segmenter = new Intl.Segmenter('en-En', { granularity: 'word' /*sentence or word*/ });
-				setWords([...segmenter.segment(e.target.value)])
-				console.log(words)
-				// get_words translations(e.target.value, setWords)
-			}}></textarea>
-			<p>{words.filter(w => w.isWordLike).map(w => w.segment).join(",").toString() }</p>
+			<RichTextEditor value={value} onChange={onChange} onImageUpload={handleImageUpload} />
+			<Button onClick={() => setWords(get_words(get_text(value)))}>Extraer palabras</Button>
+			{words.map(([sentence, parts]) => {
+				return <p>{sentence + " ==> " + parts.join(" : ").toString()} </p>
+			})}
 			{
-				
+
 				/*
 				<ul>
 					{Object.keys(words).map((e, i) => {
@@ -28,6 +63,8 @@ const Create = () => {
 			</ul>
 			*/
 			}
+
+
 
 
 		</div>
@@ -39,7 +76,7 @@ export default Create
 
 
 
-const get_words = (text, setState) => {
+const get_words_translated = (text, setState) => {
 	let words = [...new Set(text.match(/[a-z'-]+/gi))]
 
 
