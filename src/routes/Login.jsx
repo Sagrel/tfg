@@ -50,7 +50,7 @@ const Login = () => {
 							color: "red"
 						})
 					}
-
+					// TODO This checks belong in the registration, not here
 					if (password.length < 8) {
 						error_contraseña("La contraseña debe tener minimo 8 caracteres")
 					} else if (!password.match(/[a-z]+/)) {

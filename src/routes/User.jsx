@@ -2,8 +2,10 @@ import { Avatar, Button, Group, Text } from "@mantine/core";
 import { getAuth } from "firebase/auth";
 import { Logout } from "tabler-icons-react";
 
+// TODO Add graphs with info on reviews, cards learned, had cards, ...
+// TODO Show titles
+// TODO show points
 const User = () => {
-
     const user = getAuth().currentUser;
 
     return (<>

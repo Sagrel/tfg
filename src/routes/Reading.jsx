@@ -1,3 +1,4 @@
+// TODO Make this load from the database the text and have a audio player with previus sentence, next sentence and repeat options at least.
 const Reading = () => {
 
 	let text = ["Aqui deberia aparecer un texto con varios parrafos, con el boton de arriba se lee todo el texto automaticamente, aunque podriamos poner un boton por parrafo", "Este sería el 2º parrafo", "Y este el tercero"]

@@ -24,6 +24,7 @@ const get_words = (text) => {
 	return [...res]
 }
 
+// TODO Hide this?
 const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
 
 
@@ -50,32 +51,18 @@ const Create = () => {
 			<h2>Introduce el texto</h2>
 			<RichTextEditor value={value} onChange={onChange} onImageUpload={handleImageUpload} />
 			<Button onClick={() => setWords(get_words(get_text(value)))}>Extraer palabras</Button>
-			{words.map(([sentence, parts]) => {
-				return <p>{sentence + " ==> " + parts.join(" : ").toString()} </p>
-			})}
 			{
-
-				/*
-				<ul>
-					{Object.keys(words).map((e, i) => {
-						return (<li key={i}>{e} = <input value={words[e]} onChangeCapture={(t) => { setWords(previousState => ({ ...previousState, [e]: t.value })) }}></input></li>)
-					})}
-			</ul>
-			*/
+				words.map(([sentence, parts]) => {
+					return <p>{sentence + " ==> " + parts.join(" : ").toString()} </p>
+				})
 			}
-
-
-
-
 		</div>
 	)
 }
 
 export default Create
 
-
-
-
+// TODO Some how translate the words and sentences
 const get_words_translated = (text, setState) => {
 	let words = [...new Set(text.match(/[a-z'-]+/gi))]
 

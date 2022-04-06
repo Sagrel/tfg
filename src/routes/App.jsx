@@ -1,68 +1,41 @@
-import './App.css';
-
-import study from "../icons/study.png"
-import achivements from "../icons/achivements.png"
-import user from "../icons/user.png"
-import settings from "../icons/settings.png"
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { AppShell, Navbar, AspectRatio, Image } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { Book, Settings, Trophy, User } from 'tabler-icons-react';
+import { Paper, Tabs } from '@mantine/core';
+import Study from './Study';
+import SettingsTab from './Settings';
+import Achivements from './Achivements';
+import UserTab from './User';
 
 const App = () => {
-    let icons = [study, achivements, user, settings]
-    let states = ["study", "achivements", "user", "settings"]
-
-    // TODO make this not suck
-    const navbar_width = window.innerHeight / icons.length;
 
     const navigate = useNavigate();
     useEffect(() => {
-        
+
         const auth = getAuth();
 
         if (!auth.currentUser) {
             navigate("login");
+        } else {
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    navigate("login");
+                }
+            });
         }
-
-        onAuthStateChanged(auth, (user) => {
-            if (!auth.currentUser) {
-                navigate("login");
-            }
-        });
     })
 
     return (
-        <AppShell
-            navbar={<Navbar width={{ base: navbar_width }} height={"100vh"} >{
-                icons.map((icon, i) => {
-                    return (
-                        <NavLink to={states[i]} key={i} style={(({ isActive }) => ({
-                            // TODO make this not suck
-                            background: isActive ? "red" : ""
-                        }))}>
-                            <AspectRatio ratio={1} sx={{ maxWidth: navbar_width }} mx="auto">
-                                <Image
-                                    key={icon} src={icon} alt={icon}
-                                />
-                            </AspectRatio>
-                        </NavLink>
-                    )
-                })
-            }</Navbar>}
-            //header={<Header height={60} p="xs">{/* Header content */}</Header>}
-            styles={(theme) => ({
-                main: {
-                    width: "100vw",
-                    height: "100vh",
-                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
-                    color: theme.colorScheme !== 'dark' ? theme.colors.dark[8] : theme.colors.gray[0]
-                },
-            })}
-        >
-            {/* Your application here */}
-            <Outlet></Outlet>
-        </AppShell>
+        <Paper style={{ width: "100vw", height: "100vh" }} radius={0}>
+            <Tabs grow orientation="vertical" position="center" style={{ width: "100vw", height: "100vh" }} >
+                <Tabs.Tab style={{ height: "25vh" }} icon={<Book size="10vw" />}><Study /></Tabs.Tab>
+                <Tabs.Tab style={{ height: "25vh" }} icon={<Trophy size="10vw" />}><Achivements></Achivements></Tabs.Tab>
+                { /* TODO check if we have a user icon we can use */}
+                <Tabs.Tab style={{ height: "25vh" }} icon={<User size="10vw" />}><UserTab></UserTab></Tabs.Tab>
+                <Tabs.Tab style={{ height: "25vh" }} icon={<Settings size="10vw" />}><SettingsTab /></Tabs.Tab>
+            </Tabs >
+        </Paper>
     )
 }
 

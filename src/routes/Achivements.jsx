@@ -37,7 +37,11 @@ const Achivement = ({ name, description, progress, total }) => {
     )
 }
 
+
+// TODO Use a time line instead of the current aproach. This gives a sense of progress with unlockables along the way
+// TODO Add a title for each achivement
 const Achivements = () => {
+    // TODO Load these from the database
     let achivements = [
         { name: "Racha de dias", description: "Repasa 7 días seguidos", progress: 5, total: 7 },
         { name: "Constancia", description: "No te saltes ningun repaso durante un mes", progress: 2, total: 30 },
@@ -45,13 +49,13 @@ const Achivements = () => {
         { name: "Intermedio", description: "Aprende 50 palabras", progress: 35, total: 50 },
         { name: "Nativo", description: "Aprende 100 palabras", progress: 35, total: 100 },
     ]
-    
-    return (
-        <SimpleGrid cols={4} >
-            {achivements.map((e) => <Achivement {...e} key={e.name}></Achivement>)}
-        </SimpleGrid>
-    )
 
+    // TODO check what is the best amount of colums and if we should make this dynamic for phone users
+    return (
+        < SimpleGrid cols={4} >
+            {achivements.map((e) => <Achivement {...e} key={e.name}></Achivement>)}
+        </SimpleGrid >
+    )
 }
 
 export default Achivements;
