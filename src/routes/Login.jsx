@@ -21,7 +21,7 @@ const Login = () => {
 				notifications.clean();
 				notifications.showNotification({
 					title: "Sesión iniciada",
-					message: `Bien venido ${user.displayName}`,
+					message: `Bienvenido ${user.displayName}`,
 					color: "green"
 				})
 				navigate("/")
@@ -50,7 +50,6 @@ const Login = () => {
 							color: "red"
 						})
 					}
-					// TODO This checks belong in the registration, not here
 					if (password.length < 8) {
 						error_contraseña("La contraseña debe tener minimo 8 caracteres")
 					} else if (!password.match(/[a-z]+/)) {
@@ -63,11 +62,10 @@ const Login = () => {
 						const auth = getAuth();
 						// The navigation and notification are handeled in the useEffect
 						signInWithEmailAndPassword(auth, email, password)
-							.catch((error) => {
-								const errorMessage = error.message;
+							.catch((_) => {
 								notifications.showNotification({
 									title: "Error inicio de sesión",
-									message: `Hemos encontrado este error: ${errorMessage}`,
+									message: "Los datos son incorrectos",
 									color: "red"
 								})
 							});
