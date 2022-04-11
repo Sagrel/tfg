@@ -1,15 +1,24 @@
 import { Button, Card, Center, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core";
+import { getAuth } from "firebase/auth";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { Clock } from "tabler-icons-react";
 
 const Review = () => {
 
-	// TODO Fetch this from user settings
-	const timer_value = 6;
-
-	const [seconds, setSeconds] = useState(timer_value);
-	const [isActive, setIsActive] = useState(true);
+	const [timeLimit, setTimeLimit] = useState(100);
+	const [seconds, setSeconds] = useState(timeLimit);
+	const [isActive, setIsActive] = useState(false);
 	const [showBack, setShowBack] = useState(false)
+
+	useEffect(async () => {
+		const db = getFirestore();
+		const userRef = doc(db, "users", getAuth().currentUser.uid);
+		const user_data = await getDoc(userRef);
+		setTimeLimit(user_data.data().timer);
+		setSeconds(user_data.data().timer);
+		setIsActive(true);
+	}, [])
 
 	const reveal = () => {
 		setIsActive(false)
@@ -25,7 +34,7 @@ const Review = () => {
 		}
 		// Load next card info
 
-		setSeconds(timer_value)
+		setSeconds(timeLimit)
 		setShowBack(false)
 		setIsActive(true)
 	}
@@ -46,7 +55,7 @@ const Review = () => {
 
 
 	// Calculate the color of the timer (also used for the Bien buttom)
-	const time_passed_percentage = (seconds / timer_value) * 100
+	const time_passed_percentage = (seconds / timeLimit) * 100
 
 	let color = "red"
 	if (time_passed_percentage > 66) {

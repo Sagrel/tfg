@@ -1,9 +1,25 @@
-import { ActionIcon, Grid, Group, Slider, Stack, Text, useMantineColorScheme } from "@mantine/core";
+import { ActionIcon, Button, Grid, Group, Input, NumberInput, Slider, Stack, Text, useMantineColorScheme } from "@mantine/core";
 import { SunIcon, MoonIcon } from '@modulz/radix-icons';
+import { getAuth } from "firebase/auth";
+import { collection, doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
+import { useState, useEffect } from "react";
 const Settings = () => {
 
     const { colorScheme, toggleColorScheme } = useMantineColorScheme();
     const dark = colorScheme === 'dark';
+
+    const [chaged, setChanged] = useState(false);
+
+    const [time, setTime] = useState(null);
+
+    useEffect(async () => {
+        const db = getFirestore();
+        const userRef = doc(db, "users", getAuth().currentUser.uid);
+        const user_data = await getDoc(userRef);
+        setTime(user_data.data().timer);
+    }, [])
+
+
 
     return (
         <Stack style={{ height: "100vh", width: "70vw" }}>
@@ -23,7 +39,15 @@ const Settings = () => {
                     )}
                 </ActionIcon>
             </Group>
-            { /* TODO make this work some how https://www.reddit.com/r/reactjs/comments/sp4pid/how_to_set_responsive_values_for_titles_and_texts/ */ }
+            <Group>
+                <Text>Tiempo maximo de repaso</Text>
+                <NumberInput value={time} onChange={(t) => {
+                    setTime(t)
+                    setChanged(true)
+                }} max={100}
+                    min={0}></NumberInput>
+            </Group>
+            { /* TODO make this work some how https://www.reddit.com/r/reactjs/comments/sp4pid/how_to_set_responsive_values_for_titles_and_texts/ */}
             <p>
                 <Text>Cambiar tamaño de letra</Text>
                 <Slider
@@ -34,6 +58,14 @@ const Settings = () => {
                     styles={{ markLabel: { display: 'none' } }}
                 />
             </p>
+            <Button disabled={!chaged} onClick={async () => {
+                const db = getFirestore();
+                const userRef = doc(db, "users", getAuth().currentUser.uid);
+                await updateDoc(userRef, {
+                    timer: time
+                });
+                setChanged(false);
+            }}>Guardar cambios</Button>
         </Stack>
     )
 }
