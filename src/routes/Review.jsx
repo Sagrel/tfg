@@ -26,7 +26,7 @@ const Review = () => {
 	}
 
 	const next_card = (correct) => {
-
+		// TODO
 		if (correct) {
 			// Do something 
 		} else {

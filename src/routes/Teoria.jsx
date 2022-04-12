@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom"
 // TODO Allow the user to add their own notes
 const Teoria = () => {
 	const { tema } = useParams()
+
+	// user/user_id/mazos/mazo_id/notas
 	let html = "Teoria  sobre " + tema + ", puede contener html como esto <div style=\"background-color:red;\">Hola mundo</div> asi podemos incluir imagenes y enlaces a nuestro antojo"
 
 	return (<div dangerouslySetInnerHTML={{ __html: html }}></div>)
