@@ -22,8 +22,6 @@ const Achivement = ({ milestones, progress }) => {
     )
 }
 
-// TODO Use a time line instead of the current aproach. This gives a sense of progress with unlockables along the way
-// TODO Add a title for each achivement
 const Achivements = () => {
 
 

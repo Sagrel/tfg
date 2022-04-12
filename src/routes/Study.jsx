@@ -48,6 +48,7 @@ const Level = ({ elem, progress, total }) => {
                 withArrow
             >
                 <Stack>
+                    {/* TODO Boton para editar */}
                     <Button onClick={() => { navigate("review/" + elem) }}>Aprender nuevas</Button>
                     <Button onClick={() => { navigate("teoria/" + elem) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem) }}>Leer</Button>
@@ -57,6 +58,7 @@ const Level = ({ elem, progress, total }) => {
     )
 }
 
+// TODO Actually load the decks from the server
 const Study = () => {
     let ejercicios = ["Presentaciones", "Hobies", "Direcciones", "De donde eres", "Hobies", "Direcciones", "De donde eres", "Hobies", "Direcciones", "De donde eres", "Hobies", "Direcciones", "De donde eres"]
     const navigate = useNavigate();
