@@ -41,7 +41,7 @@ const Level = ({ elem, progress, total }) => {
                 onClose={() => setOpened(false)}
                 target={
                     <Stack align="center" onClick={() => setOpened((o) => !o)} style={{ cursor: "pointer" }}>
-                        <Text size="xl">{elem.name}</Text>
+                        <Text size="xl">{elem.title}</Text>
                         {ring}
                     </Stack >
                 }
@@ -74,12 +74,9 @@ const Study = () => {
         const db = getFirestore();
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
-        mazos.forEach(mazo => {
-            setMazos(old => {
-                // TODO add a "added" field or something to order the decks, this is random right now?
-                return [...old, { id: mazo.id, ...mazo.data() }]
-            })
-        })
+        // TODO should I sort this in some way?
+        setMazos(mazos.docs.map(mazo => ({id:  mazo.id, ...mazo.data()})))
+       
     }, [])
 
     return (
