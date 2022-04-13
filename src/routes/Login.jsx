@@ -18,6 +18,8 @@ const Login = () => {
 
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
+				// TODO increase daily streak if necesary
+				// NOTE: I need to keep a field containing the last conection time
 				notifications.clean();
 				notifications.showNotification({
 					title: "Sesión iniciada",
