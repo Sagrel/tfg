@@ -1,20 +1,21 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { RichTextEditor } from '@mantine/rte';
-import { ActionIcon, Button, Card, Center, Grid, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Card, Center, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { getAuth } from "firebase/auth";
-import { addDoc, collection, doc, getFirestore } from "firebase/firestore";
-import { CirclePlus, Rotate360 } from "tabler-icons-react";
+import { addDoc, collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
+import { Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // TODO No subir ni la primera nota ni la primara carta porque no son de verdad
+// TODO account for editing, don't create a whole new deck
 const createDeck = async (title, content, notes, cards, notifications) => {
 	try {
 		const user = getAuth().currentUser;
 		const db = getFirestore();
 		const mazosRef = collection(db, 'users', user.uid, "mazos");
-		const mazoDoc = await addDoc(mazosRef, { name: title, text: content });
+		const mazoDoc = await addDoc(mazosRef, { title, content });
 		const notasRef = collection(db, mazosRef.path, mazoDoc.id, "notas");
 		notes.forEach(async (note) => {
 			await addDoc(notasRef, note)
@@ -197,37 +198,60 @@ const handleImageUpload = (file) =>
 	}
 	)
 
+// TODO delete this 
+const testNotes = [
+	{ title: "", content: "" },
+	{ title: "basic note 1", content: "Some basic html content" },
+	{ title: "basic note 2", content: "Some basic html content" },
+	{ title: "basic note 3", content: "Some basic html content" },
+	{ title: "basic note 4", content: "Some basic html content" },
+]
+const testCards = [
+	{ titleFront: "", dataFront: "", titleBack: "", dataBack: "" },
+	{ titleFront: "Test1", dataFront: "", titleBack: "", dataBack: "" },
+	{ titleFront: "A long one just to test", dataFront: "", titleBack: "", dataBack: "" },
+	{ titleFront: "Test3", dataFront: "", titleBack: "", dataBack: "" },
+	{ titleFront: "Test4", dataFront: "", titleBack: "", dataBack: "" },
+	{ titleFront: "An even longer one just to test the limits", dataFront: "", titleBack: "", dataBack: "" },
+]
+
 // TODO Add preguntas
 // TODO Permitir editar test ya creados
 const Create = () => {
-	const notifications = useNotifications();
-	const navigate = useNavigate();
-
-	const [selectedCard, setSelectedCard] = useState(-1)
-	const [selectedNote, setSelectedNote] = useState(-1)
-
-	const testNotes = [
-		{ title: "", content: "" },
-		{ title: "basic note 1", content: "Some basic html content" },
-		{ title: "basic note 2", content: "Some basic html content" },
-		{ title: "basic note 3", content: "Some basic html content" },
-		{ title: "basic note 4", content: "Some basic html content" },
-	]
-
-	const testCards = [
-		{ titleFront: "", dataFront: "", titleBack: "", dataBack: "" },
-		{ titleFront: "Test1", dataFront: "", titleBack: "", dataBack: "" },
-		{ titleFront: "A long one just to test", dataFront: "", titleBack: "", dataBack: "" },
-		{ titleFront: "Test3", dataFront: "", titleBack: "", dataBack: "" },
-		{ titleFront: "Test4", dataFront: "", titleBack: "", dataBack: "" },
-		{ titleFront: "An even longer one just to test the limits", dataFront: "", titleBack: "", dataBack: "" },
-	]
-
 	// TODO do not use test data
 	const [notes, setNotes] = useState(testNotes)
 	const [cards, setCards] = useState(testCards)
 	const [title, setTitle] = useState("") // TODO add verification 
 	const [content, setContent] = useState("")
+
+	const notifications = useNotifications();
+	const navigate = useNavigate();
+
+	const { mazo: idMazo } = useParams();
+	const [selectedCard, setSelectedCard] = useState(-1)
+	const [selectedNote, setSelectedNote] = useState(-1)
+
+	useEffect(async () => {
+		if (!idMazo) return;
+		const db = getFirestore();
+		const user = getAuth().currentUser;
+		const mazoRef = doc(db, "users", user.uid, "mazos", idMazo)
+		const mazo = (await getDoc(mazoRef)).data()
+
+		setTitle(mazo.title)
+		setContent(mazo.content)
+
+		const notasRef = collection(db, mazoRef.path, "notas")
+		const tarjetasRef = collection(db, mazoRef.path, "tarjetas")
+
+		const notas = await getDocs(notasRef)
+		const tarjetas = await getDocs(tarjetasRef)
+
+		setNotes(notas.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+		setCards(tarjetas.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+
+	}, [idMazo])
+
 
 	return (
 		<Paper style={{ width: "100vw", height: "100vh" }} radius={0}>
