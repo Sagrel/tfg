@@ -4,11 +4,10 @@ import { RichTextEditor } from '@mantine/rte';
 import { ActionIcon, Button, Card, Center, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { getAuth } from "firebase/auth";
 import { addDoc, collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
-import { Rotate360 } from "tabler-icons-react";
+import { CirclePlus, Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
 
-// TODO No subir ni la primera nota ni la primara carta porque no son de verdad
 // TODO account for editing, don't create a whole new deck
 const createDeck = async (title, content, notes, cards, notifications) => {
 	try {
@@ -24,7 +23,6 @@ const createDeck = async (title, content, notes, cards, notifications) => {
 		cards.forEach(async (card) => {
 			await addDoc(tarjetasRef, card)
 		});
-		// TODO subir las tarjetas
 		notifications.clean()
 		notifications.showNotification({
 			title: "Leccion creada con exito",
@@ -47,11 +45,12 @@ const createDeck = async (title, content, notes, cards, notifications) => {
 const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
 
 const CardEditModal = ({ index, cards, close, setCards }) => {
-	const creating = index == 0;
-	const [titleFront, setTitleFront] = useState(cards[index].titleFront);
-	const [dataFront, setDataFront] = useState(cards[index].dataFront);
-	const [titleBack, setTitleBack] = useState(cards[index].titleBack);
-	const [dataBack, setDataBack] = useState(cards[index].dataBack);
+	const creating = index == -2;
+	const original = creating ? { titleFront: "", dataFront: "", titleBack: "", dataBack: "" } : cards[index];
+	const [titleFront, setTitleFront] = useState(original.titleFront);
+	const [dataFront, setDataFront] = useState(original.dataFront);
+	const [titleBack, setTitleBack] = useState(original.titleBack);
+	const [dataBack, setDataBack] = useState(original.dataBack);
 	const [showBack, setShowBack] = useState(false);
 
 	const flipButton = (
@@ -123,11 +122,10 @@ const CardEditModal = ({ index, cards, close, setCards }) => {
 
 
 const NoteEditModal = ({ index, notes, close, setNotes }) => {
-	const creating = index == 0;
-	console.log(index)
-	console.log(notes)
-	const [title, setTitle] = useState(notes[index].title);
-	const [content, setContent] = useState(notes[index].content);
+	const creating = index == -2;
+	const original = creating ? { title: "", content: "" } : notes[index];
+	const [title, setTitle] = useState(original.title);
+	const [content, setContent] = useState(original.content);
 
 	return (
 		<Modal
@@ -175,7 +173,7 @@ const NoteEditModal = ({ index, notes, close, setNotes }) => {
 
 const CardPreview = ({ name, setSelected }) => {
 	return (
-		<Card onClick={setSelected}>
+		<Card onClick={setSelected} style={{ cursor: "pointer" }}>
 			<Center>
 				<Text>{name}</Text>
 			</Center>
@@ -198,16 +196,25 @@ const handleImageUpload = (file) =>
 	}
 	)
 
+// TODO pòner más bonico
+const AddPreview = ({ activate }) => {
+	return (
+		<Card onClick={activate} style={{ cursor: "pointer" }}>
+			<Center>
+				<CirclePlus></CirclePlus>
+			</Center>
+		</Card>
+	)
+}
+
 // TODO delete this 
 const testNotes = [
-	{ title: "", content: "" },
 	{ title: "basic note 1", content: "Some basic html content" },
 	{ title: "basic note 2", content: "Some basic html content" },
 	{ title: "basic note 3", content: "Some basic html content" },
 	{ title: "basic note 4", content: "Some basic html content" },
 ]
 const testCards = [
-	{ titleFront: "", dataFront: "", titleBack: "", dataBack: "" },
 	{ titleFront: "Test1", dataFront: "", titleBack: "", dataBack: "" },
 	{ titleFront: "A long one just to test", dataFront: "", titleBack: "", dataBack: "" },
 	{ titleFront: "Test3", dataFront: "", titleBack: "", dataBack: "" },
@@ -216,7 +223,6 @@ const testCards = [
 ]
 
 // TODO Add preguntas
-// TODO Permitir editar test ya creados
 const Create = () => {
 	// TODO do not use test data
 	const [notes, setNotes] = useState(testNotes)
@@ -263,8 +269,8 @@ const Create = () => {
 					<RichTextEditor value={content} onChange={setContent} onImageUpload={handleImageUpload} />
 					<h3>Tarjetas</h3>
 					<SimpleGrid cols={4}>
+						<AddPreview activate={() => setSelectedCard(-2)}></AddPreview>
 						{
-							// TODO make is so the first cards is for adding new (add a CirclePuls icon)
 							cards.map(({ titleFront }, idx) =>
 								<CardPreview key={titleFront} name={titleFront} setSelected={() => setSelectedCard(idx)} />
 							)
@@ -272,8 +278,8 @@ const Create = () => {
 					</SimpleGrid>
 					<h3>Notas</h3>
 					<SimpleGrid cols={4}>
+						<AddPreview activate={() => setSelectedNote(-2)}></AddPreview>
 						{
-							// TODO make is so the first cards is for adding new (add a CirclePuls icon)
 							notes.map(({ title }, idx) =>
 								<CardPreview key={title} name={title} setSelected={() => setSelectedNote(idx)} />
 							)
