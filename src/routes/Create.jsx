@@ -9,6 +9,7 @@ import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
 
 // TODO account for editing, don't create a whole new deck
+// TODO add default values for "due date" and "interval" for cards
 const createDeck = async (title, content, notes, cards, notifications) => {
 	try {
 		const user = getAuth().currentUser;

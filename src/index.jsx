@@ -72,7 +72,7 @@ const Index = () => {
               </Route>
               <Route path="teoria/:tema" element={<Teoria />}></Route>
               <Route path="reading/:tema" element={<Reading />}></Route>
-              <Route path="review/:tema" element={<Review />}></Route>
+              <Route path="review/:mazo" element={<Review />}></Route>
               { /* The no params version creates a new lesson, the one with a paremeter only edits it*/}
               <Route path="create/:mazo" element={<Create />}></Route>
               <Route path="create" element={<Create />}></Route>
