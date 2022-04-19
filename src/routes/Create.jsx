@@ -3,30 +3,64 @@ import { useState, useEffect } from "react"
 import { RichTextEditor } from '@mantine/rte';
 import { ActionIcon, Button, Card, Center, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { getAuth } from "firebase/auth";
-import { addDoc, collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
 import { CirclePlus, Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
 
-// TODO account for editing, don't create a whole new deck
-// TODO add default values for "due date" and "interval" for cards
-const createDeck = async (title, content, notes, cards, notifications) => {
+// Quita todas las propiedades undefined, esto hace falta porque firebase explota si una propiedad es undefined
+const cleanObject = (obj) => {
+	for (const key in obj) {
+		if (obj[key] === undefined) {
+			delete obj[key];
+		}
+	}
+	return obj
+}
+
+// TODO hadle deleting cards in edit mode (keep track of deleted cards and remove them here)
+const createDeck = async (title, content, notes, cards, notifications, id) => {
 	try {
 		const user = getAuth().currentUser;
 		const db = getFirestore();
 		const mazosRef = collection(db, 'users', user.uid, "mazos");
-		const mazoDoc = await addDoc(mazosRef, { title, content });
-		const notasRef = collection(db, mazosRef.path, mazoDoc.id, "notas");
+		// If we have a deck we edit it, other whise create it
+		let mazoId;
+		if (id) {
+			console.log("Editando mazo")
+			const mazoDoc = doc(db, mazosRef.path, id);
+			await updateDoc(mazoDoc, { title, content });
+			mazoId = id;
+		} else {
+			console.log("Creando mazo")
+			mazoId = await addDoc(mazosRef, { title, content });
+		}
+		const notasRef = collection(db, mazosRef.path, mazoId, "notas");
 		notes.forEach(async (note) => {
-			await addDoc(notasRef, note)
+			if (note.id) {
+				const noteRef = doc(db, notasRef.path, note.id)
+				const { id, ...updatedNote } = note
+
+				updateDoc(noteRef, cleanObject(updatedNote))
+			} else {
+				await addDoc(notasRef, note)
+			}
 		});
-		const tarjetasRef = collection(db, mazosRef.path, mazoDoc.id, "tarjetas");
+		const tarjetasRef = collection(db, mazosRef.path, mazoId, "tarjetas");
 		cards.forEach(async (card) => {
-			await addDoc(tarjetasRef, card)
+			console.log(card)
+			if (card.id) {
+				const cardRef = doc(db, tarjetasRef.path, card.id)
+				const { id, ...updatedCard } = card
+				updateDoc(cardRef, cleanObject(updatedCard))
+			} else {
+				// TODO make this interval a setting
+				await addDoc(tarjetasRef, { interval: 1, ...card })
+			}
 		});
 		notifications.clean()
 		notifications.showNotification({
-			title: "Leccion creada con exito",
+			title: "Leccion guardada con exito",
 			message: `La leccion ya debería aparecer en la pestaña de inicio`,
 			color: "green"
 		})
@@ -108,7 +142,8 @@ const CardEditModal = ({ index, cards, close, setCards }) => {
 								<Button color="green" onClick={() => {
 									setCards(old => {
 										const newArray = old.slice()
-										newArray[index] = { titleFront, dataFront, titleBack, dataBack }
+										// Conservo el id original y el resto de su info para poder modificar in-place
+										newArray[index] = { titleFront, dataFront, titleBack, dataBack, id: original.id, interval: original.interval, "due date": original["due date"] }
 										return newArray
 									})
 									close()
@@ -159,7 +194,8 @@ const NoteEditModal = ({ index, notes, close, setNotes }) => {
 								<Button color="green" onClick={() => {
 									setNotes(old => {
 										const newArray = old.slice()
-										newArray[index] = { title, content }
+										// Conservo el id original para poder modificar in-place
+										newArray[index] = { title, content, id: original.id }
 										return newArray
 									})
 									close()
@@ -208,26 +244,12 @@ const AddPreview = ({ activate }) => {
 	)
 }
 
-// TODO delete this 
-const testNotes = [
-	{ title: "basic note 1", content: "Some basic html content" },
-	{ title: "basic note 2", content: "Some basic html content" },
-	{ title: "basic note 3", content: "Some basic html content" },
-	{ title: "basic note 4", content: "Some basic html content" },
-]
-const testCards = [
-	{ titleFront: "Test1", dataFront: "", titleBack: "", dataBack: "" },
-	{ titleFront: "A long one just to test", dataFront: "", titleBack: "", dataBack: "" },
-	{ titleFront: "Test3", dataFront: "", titleBack: "", dataBack: "" },
-	{ titleFront: "Test4", dataFront: "", titleBack: "", dataBack: "" },
-	{ titleFront: "An even longer one just to test the limits", dataFront: "", titleBack: "", dataBack: "" },
-]
 
 // TODO Add preguntas
 const Create = () => {
 	// TODO do not use test data
-	const [notes, setNotes] = useState(testNotes)
-	const [cards, setCards] = useState(testCards)
+	const [notes, setNotes] = useState([])
+	const [cards, setCards] = useState([])
 	const [title, setTitle] = useState("") // TODO add verification 
 	const [content, setContent] = useState("")
 
@@ -239,6 +261,7 @@ const Create = () => {
 	const [selectedNote, setSelectedNote] = useState(-1)
 
 	useEffect(async () => {
+		// Si estamos editando carga los datos del mazo, si no cancela
 		if (!idMazo) return;
 		const db = getFirestore();
 		const user = getAuth().currentUser;
@@ -272,6 +295,7 @@ const Create = () => {
 					<SimpleGrid cols={4}>
 						<AddPreview activate={() => setSelectedCard(-2)}></AddPreview>
 						{
+							// TODO Si el titleFront no es unico explota todo
 							cards.map(({ titleFront }, idx) =>
 								<CardPreview key={titleFront} name={titleFront} setSelected={() => setSelectedCard(idx)} />
 							)
@@ -281,6 +305,7 @@ const Create = () => {
 					<SimpleGrid cols={4}>
 						<AddPreview activate={() => setSelectedNote(-2)}></AddPreview>
 						{
+							// TODO Si el title no es unico explota todo
 							notes.map(({ title }, idx) =>
 								<CardPreview key={title} name={title} setSelected={() => setSelectedNote(idx)} />
 							)
@@ -296,9 +321,24 @@ const Create = () => {
 						(selectedNote != -1) &&
 						<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)}></NoteEditModal >
 					}
-					<Button color="green" onClick={() => createDeck(title, content, notes, cards, notifications).then(navigate("/"))}>
-						Guardar
-					</Button>
+					<Group grow>
+						<Button color="red" onClick={() => {
+							// TODO add some sort of verification pop up for this
+							if (idMazo) {
+								const user = getAuth().currentUser;
+								const db = getFirestore();
+								const mazoRef = doc(db, 'users', user.uid, "mazos", idMazo);
+								deleteDoc(mazoRef)
+							}
+							navigate("/")
+						}}>
+							{idMazo ? "Eliminar" : "Cancelar"}
+						</Button>
+						<Button color="green" onClick={() => createDeck(title, content, notes, cards, notifications, idMazo).then(navigate("/"))}>
+							Guardar
+						</Button>
+
+					</Group>
 				</Stack>
 			</ScrollArea>
 		</Paper>
