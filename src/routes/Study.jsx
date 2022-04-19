@@ -3,17 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { Check } from "tabler-icons-react";
 import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
-import { collection, doc, getDocs, getFirestore } from "firebase/firestore";
+import { collection, getDocs, getFirestore } from "firebase/firestore";
 
-const Level = ({ elem, progress, total }) => {
-    const p = Math.min(progress, total);
-    const percentage = Math.round(p / total * 100);
+const Level = ({ elem }) => {
+    const p = Math.min(elem.aprendiendo, elem.total);
+    const percentage = Math.round(p / elem.total * 100);
 
     const [opened, setOpened] = useState(false);
     const navigate = useNavigate();
 
 
-    let ring = p == total ?
+    let ring = p == elem.total ?
         (<RingProgress
             sections={[{ value: 100, color: 'teal' }]}
             label={
@@ -65,7 +65,7 @@ const Level = ({ elem, progress, total }) => {
 
 const Study = () => {
     const navigate = useNavigate();
-
+    const [pending, setPending] = useState(0)
     const [mazos, setMazos] = useState([]);
 
     useEffect(async () => {
@@ -75,21 +75,35 @@ const Study = () => {
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
         // TODO should I sort this in some way?
-        setMazos(mazos.docs.map(mazo => ({id:  mazo.id, ...mazo.data()})))
-       
+        setMazos(await Promise.all(mazos.docs.map(async (mazo) => {
+            // Tarjetas dentro del mazo en cuestion
+            const tarjetasRef = collection(db, "users", user.uid, "mazos", mazo.id, "tarjetas");
+            const tarjetas = await getDocs(tarjetasRef)
+            // Numero total de tarjetas en el mazo
+            const total = tarjetas.docs.length
+            // Array con las tarjetas que están en proceso de aprendizaje
+            const tarjetasPendientes = tarjetas.docs.filter(t => t.data()["due date"])
+            // Numero de tarjetas en aprendizaje
+            const aprendiendo = tarjetasPendientes.length
+            // Numero de tarjetas en aprendizaje que tienes pendiente para hoy
+            const pending = tarjetasPendientes.filter(t => t.data()["due date"] <= Date.now()).length
+            // Actualizamos el numero de tarjetas a repasar
+            setPending(old => old + pending)
+            // Nos quedamos con la información del mazo que nos importa
+            return { id: mazo.id, ...mazo.data(), total, aprendiendo }
+        })))
     }, [])
 
     return (
         <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
             <Stack>
                 <Group position="center" grow>
-                    { /* TODO Add the number of reviews to the buttom */ }
+                    { /* TODO Add the number of reviews to the buttom */}
                     <Button onClick={() => { navigate("review/galleta") /* change url*/ }}>
                         Repasar todo
                     </Button>
                     <h4>
-                        {/* TODO actuallyt keep track of the currect daily streak */}
-                        Te faltan 5 repasos para alcanzar tu objetivo diario
+                        Tarjetas por repasar: {pending}
                     </h4>
                     <Button onClick={() => { navigate("create") }}>
                         Añadir contenido
@@ -98,8 +112,7 @@ const Study = () => {
                 <SimpleGrid cols={2}>
 
                     {
-                        // TODO Actually show the progress instead of using random values
-                        mazos.map((elem, i) => <div key={i}><Level elem={elem} progress={Math.random() * 100} total={95}></Level></div>)
+                        mazos.map((elem, i) => <div key={i}><Level elem={elem}></Level></div>)
                     }
                 </SimpleGrid>
             </Stack>
