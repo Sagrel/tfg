@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Check } from "tabler-icons-react";
 import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
-import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
 
 const Level = ({ elem }) => {
     const p = Math.min(elem.aprendiendo, elem.total);
@@ -66,12 +66,17 @@ const Level = ({ elem }) => {
 const Study = () => {
     const navigate = useNavigate();
     const [pending, setPending] = useState(0)
+    const [racha, setRacha] = useState(0)
     const [mazos, setMazos] = useState([]);
 
     useEffect(async () => {
         const user = getAuth().currentUser;
         if (!user) return;
         const db = getFirestore();
+        const userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef)
+        setRacha(userDoc.data().racha ?? 0)
+
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
         // TODO should I sort this in some way?
@@ -100,11 +105,13 @@ const Study = () => {
                 <Group position="center" grow>
                     { /* TODO Add the number of reviews to the buttom */}
                     <Button onClick={() => { navigate("review/galleta") /* change url*/ }}>
-                        Repasar todo
+                        Repasar pendientes {pending}
                     </Button>
-                    <h4>
-                        Tarjetas por repasar: {pending}
-                    </h4>
+                    <Center>
+                        <h4>
+                            Racha de días: {racha}
+                        </h4>
+                    </Center>
                     <Button onClick={() => { navigate("create") }}>
                         Añadir contenido
                     </Button>

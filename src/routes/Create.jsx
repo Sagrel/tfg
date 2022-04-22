@@ -244,7 +244,6 @@ const AddPreview = ({ activate }) => {
 
 // TODO Add preguntas
 const Create = () => {
-	// TODO do not use test data
 	const [notes, setNotes] = useState([])
 	const [cards, setCards] = useState([])
 	const [title, setTitle] = useState("") // TODO add verification 
@@ -380,13 +379,6 @@ const get_words_translated = (text, setState) => {
 			setState(previousState => ({ ...previousState, [w]: translated }))
 		})
 	}
-}
-
-const get_text = (html_text) => {
-	return new DOMParser()
-		.parseFromString(html_text, "text/html")
-		.documentElement.textContent;
-	// NOTE this does not account for line endings, so don't forget to put the "." at the end of a sentence 
 }
 
 const get_words = (text) => {

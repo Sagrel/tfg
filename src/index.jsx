@@ -36,6 +36,7 @@ import { ColorSchemeProvider, MantineProvider } from "@mantine/core";
 import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
 import { NotificationsProvider } from '@mantine/notifications';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
 
 const isYesterday = (date) => {
   const yesterday = new Date();
@@ -81,20 +82,24 @@ const Index = () => {
 
     setLogged(auth.currentUser != null);
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       setLogged(user != null);
       if (user) {
         const last = new Date(user.metadata.lastSignInTime)
 
-        if (isToday(last)) {
-          console.log("Just another login")
+        const db = getFirestore();
+        const userRef = doc(db, "users", user.uid);
 
+
+        if (isToday(last)) {
+          // we do nothing
         } else if (isYesterday(last)) {
-          console.log("Fist login of the day")
-          // TODO increase daily streak       
+          // TODO Show notification somewhere    
+          const userDoc = await getDoc(userRef)
+          updateDoc(userRef, { racha: (userDoc.data().racha ?? 0) + 1 })
         } else {
-          console.log("You broke your streak")
-          // TODO break daily streak     
+          // TODO Show notification somewhere    
+          updateDoc(userRef, { racha: 0 })
         }
       }
     });
