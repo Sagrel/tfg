@@ -37,6 +37,18 @@ import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
 import { NotificationsProvider } from '@mantine/notifications';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
+const isYesterday = (date) => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  return yesterday.toDateString() === date.toDateString()
+}
+const isToday = (date) => {
+  const today = new Date();
+
+  return today.toDateString() === date.toDateString()
+}
+
 
 // Redirects the user to the logging window if not logged in
 const Aunthenticated = ({ children }) => {
@@ -72,8 +84,18 @@ const Index = () => {
     onAuthStateChanged(auth, (user) => {
       setLogged(user != null);
       if (user) {
-        // TODO increase daily streak if necesary
-        // NOTE: I need to keep a field containing the last conection time        
+        const last = new Date(user.metadata.lastSignInTime)
+
+        if (isToday(last)) {
+          console.log("Just another login")
+
+        } else if (isYesterday(last)) {
+          console.log("Fist login of the day")
+          // TODO increase daily streak       
+        } else {
+          console.log("You broke your streak")
+          // TODO break daily streak     
+        }
       }
     });
   }, [])
