@@ -1,10 +1,11 @@
 import { render } from "react-dom";
-import { useEffect } from "react";
+import { useEffect, useState, useContext } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
-  useNavigate
+  useLocation,
+  Navigate
 } from "react-router-dom";
 import App from "./routes/App";
 
@@ -24,11 +25,6 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 
 
-
-import Study from "./routes/Study"
-import Achivements from "./routes/Achivements"
-import User from "./routes/User"
-import Settings from "./routes/Settings"
 import Review from "./routes/Review";
 import Create from "./routes/Create";
 import Teoria from "./routes/Teoria";
@@ -39,6 +35,18 @@ import Register from "./routes/Register";
 import { ColorSchemeProvider, MantineProvider } from "@mantine/core";
 import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
 import { NotificationsProvider } from '@mantine/notifications';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
+
+// Redirects the user to the logging window if not logged in
+const Aunthenticated = ({ children }) => {
+  const location = useLocation()
+  if (!getAuth().currentUser) {
+    return (<Navigate to="/login" element={<Login />} replace state={{ from: location.pathname }} />)
+  }
+
+  return children
+}
 
 const Index = () => {
 
@@ -53,7 +61,22 @@ const Index = () => {
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
   }
 
+  const [logged, setLogged] = useState(false);
 
+
+  useEffect(() => {
+    const auth = getAuth();
+
+    setLogged(auth.currentUser != null);
+
+    onAuthStateChanged(auth, (user) => {
+      setLogged(user != null);
+      if (user) {
+        // TODO increase daily streak if necesary
+        // NOTE: I need to keep a field containing the last conection time        
+      }
+    });
+  }, [])
 
 
   return (
@@ -62,21 +85,16 @@ const Index = () => {
         <NotificationsProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="login" element={<Login />}></Route>
-              <Route path="register" element={<Register />}></Route>
-              <Route path="/" element={<App />}>
-                <Route path="study" element={<Study />}></Route>
-                <Route path="achivements" element={<Achivements />}></Route>
-                <Route path="user" element={<User />}></Route>
-                <Route path="settings" element={<Settings />}></Route>
-              </Route>
-              <Route path="teoria/:tema" element={<Teoria />}></Route>
-              <Route path="reading/:tema" element={<Reading />}></Route>
-              <Route path="review/:mazo" element={<Review />}></Route>
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="/" element={<Aunthenticated ><App /></Aunthenticated>} />
+              <Route path="teoria/:tema" element={<Aunthenticated><Teoria /></Aunthenticated>} />
+              <Route path="reading/:tema" element={<Aunthenticated><Reading /></Aunthenticated>} />
+              <Route path="review/:mazo" element={<Aunthenticated><Review /></Aunthenticated>} />
               { /* The no params version creates a new lesson, the one with a paremeter only edits it*/}
-              <Route path="create/:mazo" element={<Create />}></Route>
-              <Route path="create" element={<Create />}></Route>
-              <Route path="*" element={<Error />}></Route>
+              <Route path="create/:mazo" element={<Aunthenticated><Create /></Aunthenticated>} />
+              <Route path="create" element={<Aunthenticated><Create /></Aunthenticated>} />
+              <Route path="*" element={<Error />} />
             </Routes>
           </BrowserRouter>
         </NotificationsProvider>

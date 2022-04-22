@@ -1,36 +1,17 @@
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { TextInput, Button, Group, Box } from '@mantine/core';
 import { useNotifications } from "@mantine/notifications";
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Login = () => {
 	const notifications = useNotifications();
 	const navigate = useNavigate();
 
-	useEffect(() => {
+	const { state } = useLocation();
 
-		const auth = getAuth();
-
-		if (auth.currentUser) {
-			navigate("/");
-		}
-
-		onAuthStateChanged(auth, (user) => {
-			if (user) {
-				// TODO increase daily streak if necesary
-				// NOTE: I need to keep a field containing the last conection time
-				notifications.clean();
-				notifications.showNotification({
-					title: "Sesión iniciada",
-					message: `Bienvenido ${user.displayName}`,
-					color: "green"
-				})
-				navigate("/")
-			}
-		});
-	}, [])
-
+	if (getAuth().currentUser) {
+		navigate(state?.from ?? "/")
+	}
 	return (
 		<Box sx={(theme) => ({
 			width: "100vw",
@@ -39,7 +20,7 @@ const Login = () => {
 			color: theme.colorScheme !== 'dark' ? theme.colors.dark[8] : theme.colors.gray[0]
 		})}>
 
-			<Box mx="auto" sx={{maxWidth: "25%"}}>
+			<Box mx="auto" sx={{ maxWidth: "25%" }}>
 				<form onSubmit={(e) => {
 					e.preventDefault();
 					const email = e.target.email.value
@@ -64,6 +45,14 @@ const Login = () => {
 						const auth = getAuth();
 						// The navigation and notification are handeled in the useEffect
 						signInWithEmailAndPassword(auth, email, password)
+							.then(() => {
+								notifications.clean();
+								notifications.showNotification({
+									title: "Sesión iniciada",
+									message: `Bienvenido ${user.displayName}`,
+									color: "green"
+								})
+							})
 							.catch((_) => {
 								notifications.showNotification({
 									title: "Error inicio de sesión",

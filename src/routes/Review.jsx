@@ -31,7 +31,6 @@ const Review = () => {
 		const cardsRef = collection(db, "users", user.uid, "mazos", mazo, "tarjetas")
 		const cardDocs = await getDocs(cardsRef)
 		setCards(cardDocs.docs.map(card => ({ uid: card.id, mazoId: mazo, ...card.data() })))
-		console.log(cardDocs.docs.map(card => ({ uid: card.id, mazoId: mazo, ...card.data() })))
 		// Get user custom timer timit
 		const userRef = doc(db, "users", user.uid);
 		const user_data = await getDoc(userRef);

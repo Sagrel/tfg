@@ -27,12 +27,10 @@ const createDeck = async (title, content, notes, cards, notifications, id) => {
 		// If we have a deck we edit it, other whise create it
 		let mazoId;
 		if (id) {
-			console.log("Editando mazo")
 			const mazoDoc = doc(db, mazosRef.path, id);
 			await updateDoc(mazoDoc, { title, content });
 			mazoId = id;
 		} else {
-			console.log("Creando mazo")
 			mazoId = await addDoc(mazosRef, { title, content });
 		}
 		const notasRef = collection(db, mazosRef.path, mazoId, "notas");
@@ -48,7 +46,6 @@ const createDeck = async (title, content, notes, cards, notifications, id) => {
 		});
 		const tarjetasRef = collection(db, mazosRef.path, mazoId, "tarjetas");
 		cards.forEach(async (card) => {
-			console.log(card)
 			if (card.id) {
 				const cardRef = doc(db, tarjetasRef.path, card.id)
 				const { id, ...updatedCard } = card
@@ -396,12 +393,10 @@ const get_words = (text) => {
 	const word_segmenter = new Intl.Segmenter('en-En', { granularity: 'word' });
 	const sentence_segmenter = new Intl.Segmenter('en-En', { granularity: 'sentence' })
 	const sentences = [...sentence_segmenter.segment(text)]
-	console.log(sentences)
 	const res = sentences.map((sentence) => {
 		const sentence_text = sentence.segment;
 		//let words = [...word_segmenter.segment(sentence_text)]
 		return [sentence_text, [...word_segmenter.segment(sentence_text)].filter(w => w.isWordLike).map(w => w.segment.toLowerCase())]
 	})
-	console.log(res)
 	return [...res]
 }
