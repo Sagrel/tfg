@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { collection, doc, getDocs, getFirestore } from "firebase/firestore"
+import { collection, getDocs, getFirestore } from "firebase/firestore"
 import { Accordion, Center, Paper, ScrollArea } from "@mantine/core"
 import { RichTextEditor } from '@mantine/rte';
 import { getAuth } from "firebase/auth";
