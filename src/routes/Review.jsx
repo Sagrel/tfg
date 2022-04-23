@@ -6,11 +6,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock } from "tabler-icons-react";
 
-// TODO distingir entre aprender nuevas y repasar un mazo
 const Review = () => {
 
 	const [cards, setCards] = useState([])
-	// TODO handle global review
+
 	const { mazo } = useParams();
 
 	const navigate = useNavigate();
@@ -98,7 +97,7 @@ const Review = () => {
 			advanceOrEnd(tail)
 		} else {
 			const newDueDate = Date.now();
-			const newInterval = 1 /* TODO make this 1 day and configurable in the future */;
+			const newInterval = 86400000; // 1 day in milliseconds TODO make this configurable in the future 
 			updateCard(newDueDate, newInterval)
 			// add card to the back
 			const [head, ...tail] = cards;
