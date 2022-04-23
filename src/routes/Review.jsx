@@ -26,11 +26,28 @@ const Review = () => {
 
 		const user = getAuth().currentUser;
 
+		// Distinge si estamos repasando todos o si estamos aprendiendo nuevas
+		let mazosIds = [];
+		if (mazo) {
+			mazosIds = [mazo]
+		} else {
+			const mazosRef = collection(db, "users", user.uid, "mazos")
+			const mazos = await getDocs(mazosRef)
+			mazosIds = mazos.docs.map(doc => doc.id)
+		}
+
 		// Get cards to review
-		// TODO get only the ones where the due date is past
-		const cardsRef = collection(db, "users", user.uid, "mazos", mazo, "tarjetas")
-		const cardDocs = await getDocs(cardsRef)
-		setCards(cardDocs.docs.map(card => ({ uid: card.id, mazoId: mazo, ...card.data() })))
+		let cards = []
+		for (const mazoId of mazosIds) {
+			const cardsRef = collection(db, "users", user.uid, "mazos", mazoId, "tarjetas")
+			const cardDocs = await getDocs(cardsRef)
+			cards = cards.concat(cardDocs.docs.map(card => ({ uid: card.id, mazoId, ...card.data() })))
+		}
+		// TODO allow user to set number of new cards per day
+		// TODO account for already learned cards today
+		const definitiveCards = mazo ? cards.filter(card => !card["due date"]).slice(0, 10) : cards.filter(card => card["due date"] <= Date.now())
+		setCards(definitiveCards)
+
 		// Get user custom timer timit
 		const userRef = doc(db, "users", user.uid);
 		const user_data = await getDoc(userRef);
@@ -47,6 +64,8 @@ const Review = () => {
 	const time_passed_percentage = (seconds / timeLimit) * 100
 
 	const advanceOrEnd = (newCards) => {
+		// TODO Advance the achievements
+		// TODO Do it also if we just dont have any reviews to begin with
 		if (newCards.length == 0) {
 			notifications.clean()
 			notifications.showNotification({
@@ -97,7 +116,7 @@ const Review = () => {
 		if (isActive) {
 			interval = setInterval(() => {
 				// We compare against 1 because this is before subtracting the value
-				if (seconds == 1) {
+				if (seconds == 1 && cards.length > 0) {
 					reveal()
 				}
 				setSeconds(seconds => seconds - 1);
@@ -130,22 +149,34 @@ const Review = () => {
 
 			<Center style={{ width: "100vw", height: "100vh" }}>
 				<Card style={{ width: "70vw", height: "70vh", margin: 'auto' }}>
-					<Stack justify="space-around" style={{ width: "100%", height: "100%" }}>
+					{
+						(isActive && cards.length == 0) ?
+
+							<Stack justify="space-around" style={{ width: "100%", height: "100%" }}>
+								<Center>
+									<h1>¡Has terminado de repasar por hoy!</h1>
+								</Center>
+								<Button onClick={() => navigate("/")}>Volver a inicio</Button>
+							</Stack>
+							:
+							<Stack justify="space-around" style={{ width: "100%", height: "100%" }}>
 
 
-						<div style={{ position: "absolute", top: "0", right: "0", margin: "2em", color: color }} >
-							{ /* Make this look good */}
-							{seconds}<Clock size={18} style={{ width: 17 }}></Clock>
-						</div>
-						<Center>
-							<Text size="xl" weight={500} >{palabra}</Text>
-						</Center>
-						<Center>
-							<Text>{frase}</Text>
-						</Center>
-						{buttoms}
+								<div style={{ position: "absolute", top: "0", right: "0", margin: "2em", color: color }} >
+									{ /* Make this look good */}
+									{seconds}<Clock size={18} style={{ width: 17 }}></Clock>
+								</div>
+								<Center>
+									<Text size="xl" weight={500} >{palabra}</Text>
+								</Center>
+								<Center>
+									<Text>{frase}</Text>
+								</Center>
+								{buttoms}
 
-					</Stack>
+							</Stack>
+					}
+
 				</Card>
 			</Center>
 		</Paper>

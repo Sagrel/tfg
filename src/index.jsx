@@ -85,6 +85,7 @@ const Index = () => {
     onAuthStateChanged(auth, async (user) => {
       setLogged(user != null);
       if (user) {
+        // FIXME Do not use user.metadata.lastSignInTime as it takes a couple of minutes to update and therefore if you reload the page it still thinks it's your first login of the day
         const last = new Date(user.metadata.lastSignInTime)
 
         const db = getFirestore();
@@ -117,6 +118,8 @@ const Index = () => {
               <Route path="/" element={<Aunthenticated ><App /></Aunthenticated>} />
               <Route path="teoria/:tema" element={<Aunthenticated><Teoria /></Aunthenticated>} />
               <Route path="reading/:tema" element={<Aunthenticated><Reading /></Aunthenticated>} />
+              { /* The no params version reviews every thing, the one with a paremeter only adds new words to the learning list */}
+              <Route path="review/" element={<Aunthenticated><Review /></Aunthenticated>} />
               <Route path="review/:mazo" element={<Aunthenticated><Review /></Aunthenticated>} />
               { /* The no params version creates a new lesson, the one with a paremeter only edits it*/}
               <Route path="create/:mazo" element={<Aunthenticated><Create /></Aunthenticated>} />

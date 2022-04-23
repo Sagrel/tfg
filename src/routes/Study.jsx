@@ -50,7 +50,6 @@ const Level = ({ elem }) => {
                 withArrow
             >
                 <Stack>
-                    {/* I should use the uid of the lesson instead of the name */}
                     <Button onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
                     <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
@@ -75,7 +74,7 @@ const Study = () => {
         const db = getFirestore();
         const userRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userRef)
-        setRacha(userDoc.data().racha ?? 0)
+        setRacha(userDoc.data().racha ?? 0) // FIXME this happens before the change is actually done in the database
 
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
@@ -103,8 +102,7 @@ const Study = () => {
         <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
             <Stack>
                 <Group position="center" grow>
-                    { /* TODO Add the number of reviews to the buttom */}
-                    <Button onClick={() => { navigate("review/galleta") /* change url*/ }}>
+                    <Button onClick={() => { navigate("review") }}>
                         Repasar pendientes {pending}
                     </Button>
                     <Center>
@@ -117,7 +115,6 @@ const Study = () => {
                     </Button>
                 </Group>
                 <SimpleGrid cols={2}>
-
                     {
                         mazos.map((elem, i) => <div key={i}><Level elem={elem}></Level></div>)
                     }

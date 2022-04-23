@@ -52,7 +52,8 @@ const createDeck = async (title, content, notes, cards, notifications, id) => {
 				updateDoc(cardRef, cleanObject(updatedCard))
 			} else {
 				// TODO make this interval a setting
-				await addDoc(tarjetasRef, { interval: 1, ...card })
+				const interval = 86400000; // 1 day in milliseconds
+				await addDoc(tarjetasRef, { interval, ...card })
 			}
 		});
 		notifications.clean()
