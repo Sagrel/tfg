@@ -25,6 +25,11 @@ const Review = () => {
 
 		const user = getAuth().currentUser;
 
+		/*
+			TODO  read the number of cards to learn
+			const userDoc = await getDoc(doc(db, "users", user.uid))
+			const pendingToLearn = userDoc.data().toLearn
+		*/
 		// Distinge si estamos repasando todos o si estamos aprendiendo nuevas
 		let mazosIds = [];
 		if (mazo) {

@@ -18,12 +18,12 @@ const cleanObject = (obj) => {
 	return obj
 }
 
-// TODO hadle deleting cards in edit mode (keep track of deleted cards and remove them here)
-const createDeck = async (title, content, notes, cards, notifications, id) => {
+const save = async (title, content, notes, cards, notifications, id, deletedCards, deletedNotes) => {
 	try {
 		const user = getAuth().currentUser;
 		const db = getFirestore();
 		const mazosRef = collection(db, 'users', user.uid, "mazos");
+
 		// If we have a deck we edit it, other whise create it
 		let mazoId;
 		if (id) {
@@ -33,6 +33,7 @@ const createDeck = async (title, content, notes, cards, notifications, id) => {
 		} else {
 			mazoId = await addDoc(mazosRef, { title, content });
 		}
+
 		const notasRef = collection(db, mazosRef.path, mazoId, "notas");
 		notes.forEach(async (note) => {
 			if (note.id) {
@@ -44,18 +45,29 @@ const createDeck = async (title, content, notes, cards, notifications, id) => {
 				await addDoc(notasRef, note)
 			}
 		});
+
 		const tarjetasRef = collection(db, mazosRef.path, mazoId, "tarjetas");
 		cards.forEach(async (card) => {
+			card = cleanObject(card)
 			if (card.id) {
 				const cardRef = doc(db, tarjetasRef.path, card.id)
-				const { id, ...updatedCard } = card
-				updateDoc(cardRef, cleanObject(updatedCard))
+				delete card["id"]
+				updateDoc(cardRef, card)
 			} else {
 				// TODO make this interval a setting
 				const interval = 86400000; // 1 day in milliseconds
 				await addDoc(tarjetasRef, { interval, ...card })
 			}
 		});
+
+		for (const cardId of deletedCards) {
+			await deleteDoc(doc(db, mazosRef.path, mazoId, "tarjetas", cardId))
+		}
+
+		for (const noteId of deletedNotes) {
+			await deleteDoc(doc(db, mazosRef.path, mazoId, "notas", noteId))
+		}
+
 		notifications.clean()
 		notifications.showNotification({
 			title: "Leccion guardada con exito",
@@ -77,7 +89,7 @@ const createDeck = async (title, content, notes, cards, notifications, id) => {
 // TODO Hide this?
 const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
 
-const CardEditModal = ({ index, cards, close, setCards }) => {
+const CardEditModal = ({ index, cards, close, setCards, setDeletedCards }) => {
 	const creating = index == -2;
 	const original = creating ? { titleFront: "", dataFront: "", titleBack: "", dataBack: "" } : cards[index];
 	const [titleFront, setTitleFront] = useState(original.titleFront);
@@ -130,6 +142,9 @@ const CardEditModal = ({ index, cards, close, setCards }) => {
 							:
 							<>
 								<Button color="red" onClick={() => {
+									if (original.id) {
+										setDeletedCards(old => [...old, original.id])
+									}
 									setCards(old => {
 										const newArray = old.slice()
 										newArray.splice(index, 1)
@@ -155,7 +170,7 @@ const CardEditModal = ({ index, cards, close, setCards }) => {
 }
 
 
-const NoteEditModal = ({ index, notes, close, setNotes }) => {
+const NoteEditModal = ({ index, notes, close, setNotes, setDeletedNotes }) => {
 	const creating = index == -2;
 	const original = creating ? { title: "", content: "" } : notes[index];
 	const [title, setTitle] = useState(original.title);
@@ -182,6 +197,9 @@ const NoteEditModal = ({ index, notes, close, setNotes }) => {
 							:
 							<>
 								<Button color="red" onClick={() => {
+									if (original.id) {
+										setDeletedNotes(old => [...old, original.id])
+									}
 									setNotes(old => {
 										const newArray = old.slice()
 										newArray.splice(index, 1)
@@ -231,14 +249,11 @@ const handleImageUpload = (file) =>
 	}
 	)
 
-// TODO pòner más bonico
 const AddPreview = ({ activate }) => {
 	return (
-		<Card onClick={activate} style={{ cursor: "pointer" }}>
-			<Center>
-				<CirclePlus></CirclePlus>
-			</Center>
-		</Card>
+		<Center onClick={activate} style={{ cursor: "pointer" }}>
+			<CirclePlus />
+		</Center>
 	)
 }
 
@@ -247,6 +262,9 @@ const AddPreview = ({ activate }) => {
 const Create = () => {
 	const [notes, setNotes] = useState([])
 	const [cards, setCards] = useState([])
+	const [deletedCards, setDeletedCards] = useState([])
+	const [deletedNotes, setDeletedNotes] = useState([])
+
 	const [title, setTitle] = useState("") // TODO add verification 
 	const [content, setContent] = useState("")
 
@@ -311,12 +329,12 @@ const Create = () => {
 					{
 						// Modal de editar/crear tarjeta
 						(selectedCard != -1) &&
-						<CardEditModal index={selectedCard} cards={cards} setCards={setCards} close={() => setSelectedCard(-1)}></CardEditModal>
+						<CardEditModal index={selectedCard} cards={cards} setCards={setCards} close={() => setSelectedCard(-1)} setDeletedCards={setDeletedCards} ></CardEditModal>
 					}
 					{
 						// Modal de editar/crear nota
 						(selectedNote != -1) &&
-						<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)}></NoteEditModal >
+						<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)} setDeletedNotes={setDeletedNotes} ></NoteEditModal >
 					}
 					<Group grow>
 						<Button color="red" onClick={() => {
@@ -331,14 +349,14 @@ const Create = () => {
 						}}>
 							{idMazo ? "Eliminar" : "Cancelar"}
 						</Button>
-						<Button color="green" onClick={() => createDeck(title, content, notes, cards, notifications, idMazo).then(navigate("/"))}>
+						<Button color="green" onClick={() => save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes).then(navigate("/"))}>
 							Guardar
 						</Button>
 
 					</Group>
 				</Stack>
 			</ScrollArea>
-		</Paper>
+		</Paper >
 	)
 }
 

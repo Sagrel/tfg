@@ -11,7 +11,7 @@ const Achivement = ({ milestones, progress }) => {
             lineWidth={4} >
             {
                 milestones.map(({ nombre, logro, puntos }) => {
-                    return (<Timeline.Item title={nombre}>
+                    return (<Timeline.Item title={nombre} key={nombre}>
                         <Text color="dimmed" size="sm"> {logro}</Text>
                         <Text size="xs" mt={4}>{progress >= puntos ? "Conseguido" : `Progreso: ${progress}/${puntos}`}</Text>
                     </Timeline.Item>
