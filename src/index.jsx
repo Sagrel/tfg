@@ -96,10 +96,10 @@ const Index = () => {
         } else if (isYesterday(last)) {
           // TODO Show notification somewhere    
           const userDoc = await getDoc(userRef)
-          updateDoc(userRef, { racha: (userDoc.data().racha ?? 0) + 1, lastSignInTime: Date.now() })
+          updateDoc(userRef, { racha: (userDoc.data().racha ?? 0) + 1, lastSignInTime: Date.now(), learnedToday: 0 })
         } else {
           // TODO Show notification somewhere    
-          updateDoc(userRef, { racha: 0, lastSignInTime: Date.now() })
+          updateDoc(userRef, { racha: 0, lastSignInTime: Date.now(), learnedToday: 0 })
         }
       }
     });

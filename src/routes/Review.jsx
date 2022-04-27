@@ -1,7 +1,7 @@
 import { Button, Card, Center, Group, Paper, Stack, Text } from "@mantine/core";
 import { useNotifications } from "@mantine/notifications";
 import { getAuth } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
+import { collection, doc, FieldValue, Firestore, getDoc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock } from "tabler-icons-react";
@@ -9,8 +9,11 @@ import { Clock } from "tabler-icons-react";
 const Review = () => {
 
 	const [cards, setCards] = useState([])
+	const [total, setTotal] = useState(0)
 
 	const { mazo } = useParams();
+
+	const learning = mazo ? true : false
 
 	const navigate = useNavigate();
 	const notifications = useNotifications();
@@ -25,11 +28,6 @@ const Review = () => {
 
 		const user = getAuth().currentUser;
 
-		/*
-			TODO  read the number of cards to learn
-			const userDoc = await getDoc(doc(db, "users", user.uid))
-			const pendingToLearn = userDoc.data().toLearn
-		*/
 		// Distinge si estamos repasando todos o si estamos aprendiendo nuevas
 		let mazosIds = [];
 		if (mazo) {
@@ -47,16 +45,26 @@ const Review = () => {
 			const cardDocs = await getDocs(cardsRef)
 			cards = cards.concat(cardDocs.docs.map(card => ({ uid: card.id, mazoId, ...card.data() })))
 		}
-		// TODO allow user to set number of new cards per day
-		// TODO account for already learned cards today
-		const definitiveCards = mazo ? cards.filter(card => !card["due date"]).slice(0, 10) : cards.filter(card => card["due date"] <= Date.now())
-		setCards(definitiveCards)
 
-		// Get user custom timer timit
-		const userRef = doc(db, "users", user.uid);
-		const user_data = await getDoc(userRef);
-		setTimeLimit(user_data.data().timer);
-		setSeconds(user_data.data().timer);
+		const userData = await (await getDoc(doc(db, "users", user.uid))).data()
+		const learnedToday = userData.learnedToday ?? 0
+		const learnLimit = userData.learnLimit ?? 10
+
+		if (learnedToday == learnLimit) {
+			notifications.showNotification({
+				title: "Limite alcanzado",
+				message: "Ya has alcanzado el limite de tarjetas nuevas que puedes aprender hoy",
+				color: "blue"
+			})
+		}
+
+		const definitiveCards = mazo ? cards.filter(card => !card["due date"]).slice(0, learnLimit - learnedToday) : cards.filter(card => card["due date"] <= Date.now())
+		setCards(definitiveCards)
+		setTotal(definitiveCards.length)
+
+
+		setTimeLimit(userData.timer);
+		setSeconds(userData.timer);
 		setIsActive(true);
 	}, [mazo])
 
@@ -74,7 +82,7 @@ const Review = () => {
 			notifications.clean()
 			notifications.showNotification({
 				title: "Repaso terminado",
-				message: "Enhorabuena, has terminado el repaso de hoy",
+				message: "Enhorabuena, has terminado de repasar",
 				color: "green"
 			})
 			navigate("/")
@@ -92,13 +100,25 @@ const Review = () => {
 			updateDoc(cardRef, { "due date": newDueDate, "interval": newInterval })
 		}
 
+		const incrementLearned = () => {
+			const db = getFirestore()
+			const user = getAuth().currentUser
+			const cardRef = doc(db, "users", user.uid)
+			updateDoc(cardRef, { learnedToday: increment(1) })
+		}
+
 		if (correct) {
 			// TODO advance the required achivements
+			// TODO implement a better algorithm
 			const newDueDate = Date.now() + cards[0].interval;
 			const newInterval = cards[0].interval * (2 + time_passed_percentage / 100);
 			updateCard(newDueDate, newInterval)
+			if (learning) {
+				incrementLearned()
+			}
 			// remove the card from review list
 			const [_, ...tail] = cards;
+
 			advanceOrEnd(tail)
 		} else {
 			const newDueDate = Date.now();
@@ -106,7 +126,7 @@ const Review = () => {
 			updateCard(newDueDate, newInterval)
 			// add card to the back
 			const [head, ...tail] = cards;
-			advanceOrEnd([...tail, head])
+			setCards([...tail, head])
 		}
 
 		setSeconds(timeLimit)
@@ -167,8 +187,10 @@ const Review = () => {
 
 
 								<div style={{ position: "absolute", top: "0", right: "0", margin: "2em", color: color }} >
-									{ /* Make this look good */}
 									{seconds}<Clock size={18} style={{ width: 17 }}></Clock>
+								</div>
+								<div style={{ position: "absolute", top: "0", left: "0", margin: "2em" }} >
+									<Text>{total - cards.length}/{total}</Text>
 								</div>
 								<Center>
 									<Text size="xl" weight={500} >{palabra}</Text>
@@ -177,6 +199,7 @@ const Review = () => {
 									<Text>{frase}</Text>
 								</Center>
 								{buttoms}
+
 
 							</Stack>
 					}

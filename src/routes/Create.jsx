@@ -31,7 +31,7 @@ const save = async (title, content, notes, cards, notifications, id, deletedCard
 			await updateDoc(mazoDoc, { title, content });
 			mazoId = id;
 		} else {
-			mazoId = await addDoc(mazosRef, { title, content });
+			mazoId = await (await addDoc(mazosRef, { title, content })).id;
 		}
 
 		const notasRef = collection(db, mazosRef.path, mazoId, "notas");
@@ -362,52 +362,3 @@ const Create = () => {
 
 
 export default Create
-
-/*
-{
-	TODO Decidir si voy a hacer lo de extraer las palabras y traducirlas
-	<Button onClick={() => setContent(get_words(get_text(value)))}>Extraer palabras</Button>
-	content.map(([sentence, parts]) => {
-		return <p>{sentence + " ==> " + parts.join(" : ").toString()} </p>
-	})
-}
-*/
-
-// TODO Some how translate the words and sentences
-const get_words_translated = (text, setState) => {
-	let words = [...new Set(text.match(/[a-z'-]+/gi))]
-
-
-	const get_translation = async (word) => {
-		const res = await fetch("https://translate.mentality.rip/translate", {
-			method: "POST",
-			body: JSON.stringify({
-				q: word,
-				source: "en",
-				target: "es"
-			}),
-			headers: { "Content-Type": "application/json" }
-		});
-
-		return (await res.json()).translatedText
-	}
-
-	for (const w of words) {
-
-		get_translation(w).then((translated) => {
-			setState(previousState => ({ ...previousState, [w]: translated }))
-		})
-	}
-}
-
-const get_words = (text) => {
-	const word_segmenter = new Intl.Segmenter('en-En', { granularity: 'word' });
-	const sentence_segmenter = new Intl.Segmenter('en-En', { granularity: 'sentence' })
-	const sentences = [...sentence_segmenter.segment(text)]
-	const res = sentences.map((sentence) => {
-		const sentence_text = sentence.segment;
-		//let words = [...word_segmenter.segment(sentence_text)]
-		return [sentence_text, [...word_segmenter.segment(sentence_text)].filter(w => w.isWordLike).map(w => w.segment.toLowerCase())]
-	})
-	return [...res]
-}

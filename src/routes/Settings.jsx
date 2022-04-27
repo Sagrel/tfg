@@ -12,12 +12,14 @@ const Settings = () => {
     const [chaged, setChanged] = useState(false);
 
     const [time, setTime] = useState(null);
+    const [news, setNews] = useState(null);
 
     useEffect(async () => {
         const db = getFirestore();
         const userRef = doc(db, "users", getAuth().currentUser.uid);
-        const user_data = await getDoc(userRef);
-        setTime(user_data.data().timer);
+        const user_data = await (await getDoc(userRef)).data();
+        setTime(user_data.timer);
+        setNews(user_data.learnLimit);
     }, [])
 
     return (
@@ -46,11 +48,20 @@ const Settings = () => {
                 }} max={100}
                     min={0}></NumberInput>
             </Group>
+            <Group>
+                <Text>Tarjetas nuevas por día</Text>
+                <NumberInput value={news} onChange={(t) => {
+                    setNews(t)
+                    setChanged(true)
+                }} max={999}
+                    min={0}></NumberInput>
+            </Group>
             <Button disabled={!chaged} onClick={async () => {
                 const db = getFirestore();
                 const userRef = doc(db, "users", getAuth().currentUser.uid);
                 await updateDoc(userRef, {
-                    timer: time
+                    timer: time,
+                    learnLimit: news
                 });
                 setChanged(false);
             }}>Guardar cambios</Button>

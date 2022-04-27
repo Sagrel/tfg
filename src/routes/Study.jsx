@@ -50,7 +50,7 @@ const Level = ({ elem }) => {
                 withArrow
             >
                 <Stack>
-                    <Button onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
+                    <Button disabled={p == elem.total}  onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
                     <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
                     <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
