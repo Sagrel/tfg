@@ -76,10 +76,11 @@ const Reading = () => {
 
 
 const getText = (html_text) => {
+	// This is a little HACK that prevents the last line of a paragraph and the first of the next to merge into one sentence
+	html_text = html_text.replace("</p>", "</p> ")
 	return new DOMParser()
 		.parseFromString(html_text, "text/html")
 		.documentElement.textContent;
-	// NOTE this does not account for line endings, so don't forget to put the "." at the end of a sentence 
 }
 
 const getSentences = (text) => {
