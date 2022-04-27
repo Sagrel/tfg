@@ -85,22 +85,21 @@ const Index = () => {
     onAuthStateChanged(auth, async (user) => {
       setLogged(user != null);
       if (user) {
-        // FIXME Do not use user.metadata.lastSignInTime as it takes a couple of minutes to update and therefore if you reload the page it still thinks it's your first login of the day
-        const last = new Date(user.metadata.lastSignInTime)
-
         const db = getFirestore();
         const userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
 
+        const last = new Date(userDoc.data().lastSignInTime) ?? new Date(user.metadata.lastSignInTime)
 
         if (isToday(last)) {
-          // we do nothing
+          updateDoc(userRef, { lastSignInTime: Date.now() })
         } else if (isYesterday(last)) {
           // TODO Show notification somewhere    
           const userDoc = await getDoc(userRef)
-          updateDoc(userRef, { racha: (userDoc.data().racha ?? 0) + 1 })
+          updateDoc(userRef, { racha: (userDoc.data().racha ?? 0) + 1, lastSignInTime: Date.now() })
         } else {
           // TODO Show notification somewhere    
-          updateDoc(userRef, { racha: 0 })
+          updateDoc(userRef, { racha: 0, lastSignInTime: Date.now() })
         }
       }
     });
