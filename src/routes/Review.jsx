@@ -1,10 +1,11 @@
 import { Button, Card, Center, Group, Paper, Stack, Text } from "@mantine/core";
 import { useNotifications } from "@mantine/notifications";
 import { getAuth } from "firebase/auth";
-import { collection, doc, FieldValue, Firestore, getDoc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock } from "tabler-icons-react";
+
 
 const Review = () => {
 
@@ -58,7 +59,7 @@ const Review = () => {
 			})
 		}
 
-		const definitiveCards = mazo ? cards.filter(card => !card["due date"]).slice(0, learnLimit - learnedToday) : cards.filter(card => card["due date"] <= Date.now())
+		const definitiveCards = mazo ? cards.filter(card => !card["due date"]).slice(0, learnLimit - learnedToday) : cards.filter(card => new Date(card["due date"]) <= new Date())
 		setCards(definitiveCards)
 		setTotal(definitiveCards.length)
 
@@ -97,7 +98,7 @@ const Review = () => {
 			const db = getFirestore()
 			const user = getAuth().currentUser
 			const cardRef = doc(db, "users", user.uid, "mazos", cards[0].mazoId, "tarjetas", cards[0].uid)
-			updateDoc(cardRef, { "due date": newDueDate, "interval": newInterval })
+			updateDoc(cardRef, { "due date": newDueDate.toDateString(), "interval": newInterval })
 		}
 
 		const incrementLearned = () => {
@@ -110,8 +111,10 @@ const Review = () => {
 		if (correct) {
 			// TODO advance the required achivements
 			// TODO implement a better algorithm
-			const newDueDate = Date.now() + cards[0].interval;
-			const newInterval = cards[0].interval * (2 + time_passed_percentage / 100);
+			const newDueDate = new Date()
+			newDueDate.setDate(newDueDate.getDate() + cards[0].interval)
+
+			const newInterval = Math.round(cards[0].interval * (2 + time_passed_percentage / 100));
 			updateCard(newDueDate, newInterval)
 			if (learning) {
 				incrementLearned()
@@ -121,8 +124,8 @@ const Review = () => {
 
 			advanceOrEnd(tail)
 		} else {
-			const newDueDate = Date.now();
-			const newInterval = 86400000; // 1 day in milliseconds TODO make this configurable in the future 
+			const newDueDate = new Date();
+			const newInterval = 1;
 			updateCard(newDueDate, newInterval)
 			// add card to the back
 			const [head, ...tail] = cards;

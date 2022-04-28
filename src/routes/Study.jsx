@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
 
+
+
 const Level = ({ elem }) => {
     const p = Math.min(elem.aprendiendo, elem.total);
     const percentage = Math.round(p / elem.total * 100);
@@ -50,7 +52,7 @@ const Level = ({ elem }) => {
                 withArrow
             >
                 <Stack>
-                    <Button disabled={p == elem.total}  onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
+                    <Button disabled={p == elem.total} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
                     <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
                     <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
@@ -90,7 +92,7 @@ const Study = () => {
             // Numero de tarjetas en aprendizaje
             const aprendiendo = tarjetasPendientes.length
             // Numero de tarjetas en aprendizaje que tienes pendiente para hoy
-            const pending = tarjetasPendientes.filter(t => t.data()["due date"] <= Date.now()).length
+            const pending = tarjetasPendientes.filter(t => new Date(t.data()["due date"]) <= new Date()).length
             // Actualizamos el numero de tarjetas a repasar
             setPending(old => old + pending)
             // Nos quedamos con la información del mazo que nos importa

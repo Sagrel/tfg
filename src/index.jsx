@@ -37,18 +37,9 @@ import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
 import { NotificationsProvider } from '@mantine/notifications';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
+import { isToday, isYesterday } from "./utils"
 
-const isYesterday = (date) => {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
 
-  return yesterday.toDateString() === date.toDateString()
-}
-const isToday = (date) => {
-  const today = new Date();
-
-  return today.toDateString() === date.toDateString()
-}
 
 
 // Redirects the user to the logging window if not logged in
@@ -91,15 +82,17 @@ const Index = () => {
 
         const last = new Date(userDoc.data().lastSignInTime) ?? new Date(user.metadata.lastSignInTime)
 
+        const today = new Date().toDateString()
+
         if (isToday(last)) {
-          updateDoc(userRef, { lastSignInTime: Date.now() })
+          updateDoc(userRef, { lastSignInTime: today })
         } else if (isYesterday(last)) {
           // TODO Show notification somewhere    
           const userDoc = await getDoc(userRef)
-          updateDoc(userRef, { racha: (userDoc.data().racha ?? 0) + 1, lastSignInTime: Date.now(), learnedToday: 0 })
+          updateDoc(userRef, { racha: (userDoc.data().racha ?? 1) + 1, lastSignInTime: today, learnedToday: 0 })
         } else {
           // TODO Show notification somewhere    
-          updateDoc(userRef, { racha: 0, lastSignInTime: Date.now(), learnedToday: 0 })
+          updateDoc(userRef, { racha: 0, lastSignInTime: today, learnedToday: 0 })
         }
       }
     });

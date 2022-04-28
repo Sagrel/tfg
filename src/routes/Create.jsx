@@ -55,7 +55,7 @@ const save = async (title, content, notes, cards, notifications, id, deletedCard
 				updateDoc(cardRef, card)
 			} else {
 				// TODO make this interval a setting
-				const interval = 86400000; // 1 day in milliseconds
+				const interval = 1;
 				await addDoc(tarjetasRef, { interval, ...card })
 			}
 		});
