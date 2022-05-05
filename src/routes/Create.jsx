@@ -7,16 +7,9 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, upda
 import { CirclePlus, Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
+import { cleanObject } from "../utils";
 
-// Quita todas las propiedades undefined, esto hace falta porque firebase explota si una propiedad es undefined
-const cleanObject = (obj) => {
-	for (const key in obj) {
-		if (obj[key] === undefined) {
-			delete obj[key];
-		}
-	}
-	return obj
-}
+
 
 const save = async (title, content, notes, cards, notifications, id, deletedCards, deletedNotes) => {
 	try {

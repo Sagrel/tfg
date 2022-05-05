@@ -7,16 +7,16 @@ import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firesto
 
 
 
-const Level = ({ elem }) => {
-    const p = Math.min(elem.aprendiendo, elem.total);
-    const percentage = Math.round(p / elem.total * 100);
+const Level = ({ elem, canLearn }) => {
+    const percentageLearning = Math.round((elem.aprendiendo - elem.pendientes) / elem.total * 100);
+    const percentageFailed = Math.round(elem.fallidas / elem.total * 100);
+    const percentagePending = Math.round((elem.pendientes - elem.fallidas) / elem.total * 100);
+    const percentageNew = 100 - percentageLearning - percentageFailed - percentagePending;
 
     const [opened, setOpened] = useState(false);
     const navigate = useNavigate();
 
-    // TODO say the number of pending reviews and allow for reviewing and learning new at the same time. (Maybe divide the ring progress into diferent sections like in the example)
-    // https://mantine.dev/core/ring-progress/
-    let ring = p == elem.total ?
+    let ring = percentageFailed == 0 && percentageFailed == 0 && percentageNew == 0 ?
         (<RingProgress
             sections={[{ value: 100, color: 'teal' }]}
             label={
@@ -28,10 +28,26 @@ const Level = ({ elem }) => {
             }
         />) :
         (<RingProgress
-            sections={[{ value: percentage, color: 'blue' }]}
+
+            sections={[
+                { value: percentageLearning, color: 'teal' },
+                { value: percentagePending, color: 'yellow' },
+                { value: percentageFailed, color: 'red' },
+                { value: percentageNew, color: 'blue' }]}
             label={
-                <Text color="blue" weight={700} align="center" size="xl">
-                    {percentage}%
+
+                <Text weight={700} align="center" size="xl">
+                    <Text color="blue" weight={700} size="xl" inherit component="span">
+                        {elem.total - elem.aprendiendo}
+                    </Text>
+                    /
+                    <Text color="red" weight={700} size="xl" inherit component="span">
+                        {elem.fallidas}
+                    </Text>
+                    /
+                    <Text color="yellow" weight={700} size="xl" inherit component="span">
+                        {elem.pendientes - elem.fallidas}
+                    </Text>
                 </Text>
             }
         />)
@@ -53,7 +69,7 @@ const Level = ({ elem }) => {
                 withArrow
             >
                 <Stack>
-                    <Button disabled={p == elem.total} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
+                    <Button disabled={elem.aprendiendo == elem.total || !canLearn} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
                     <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
                     <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
@@ -64,12 +80,13 @@ const Level = ({ elem }) => {
 }
 
 
-
+// FIXME updates in other windows like editing a level or seting the daily streak seem to happen after the screen renders so it's outdated
 const Study = () => {
     const navigate = useNavigate();
     const [pending, setPending] = useState(0)
     const [racha, setRacha] = useState(0)
     const [mazos, setMazos] = useState([]);
+    const [canLearn, setCanLearn] = useState(true)
 
     useEffect(async () => {
         const user = getAuth().currentUser;
@@ -77,8 +94,9 @@ const Study = () => {
         const db = getFirestore();
         const userRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userRef)
-        setRacha(userDoc.data().racha ?? 0) // FIXME this happens before the change is actually done in the database
-
+        const userData = userDoc.data()
+        setRacha(userData.racha ?? 0) // FIXME this happens before the change is actually done in the database
+        setCanLearn(userData.learnedToday < userData.learnLimit)
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
         // TODO should I sort this in some way?
@@ -89,15 +107,17 @@ const Study = () => {
             // Numero total de tarjetas en el mazo
             const total = tarjetas.docs.length
             // Array con las tarjetas que están en proceso de aprendizaje
-            const tarjetasPendientes = tarjetas.docs.filter(t => t.data()["due date"])
+            const tarjetasEnAprendizaje = tarjetas.docs.filter(t => t.data()["due date"])
             // Numero de tarjetas en aprendizaje
-            const aprendiendo = tarjetasPendientes.length
+            const aprendiendo = tarjetasEnAprendizaje.length
+            // Array con las tarjetas que has fallado
+            const fallidas = tarjetasEnAprendizaje.filter(t => t.data()["failed"]).length
             // Numero de tarjetas en aprendizaje que tienes pendiente para hoy
-            const pending = tarjetasPendientes.filter(t => new Date(t.data()["due date"]) <= new Date()).length
+            const pendientes = tarjetasEnAprendizaje.filter(t => new Date(t.data()["due date"]) <= new Date()).length
             // Actualizamos el numero de tarjetas a repasar
-            setPending(old => old + pending)
+            setPending(old => old + pendientes)
             // Nos quedamos con la información del mazo que nos importa
-            return { id: mazo.id, ...mazo.data(), total, aprendiendo }
+            return { id: mazo.id, ...mazo.data(), total, aprendiendo, fallidas, pendientes }
         })))
     }, [])
 
@@ -119,7 +139,7 @@ const Study = () => {
                 </Group>
                 <SimpleGrid cols={2}>
                     {
-                        mazos.map((elem, i) => <div key={i}><Level elem={elem}></Level></div>)
+                        mazos.map((elem, i) => <div key={i}><Level elem={elem} canLearn={canLearn}></Level></div>)
                     }
                 </SimpleGrid>
             </Stack>

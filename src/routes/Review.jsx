@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, getFirestore, increment, updateDoc } 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock } from "tabler-icons-react";
+import { cleanObject } from "../utils";
 
 
 const Review = () => {
@@ -14,6 +15,7 @@ const Review = () => {
 
 	const { mazo } = useParams();
 
+	// TODO mix reviewing a deck and learning new cards from that deck
 	const learning = mazo ? true : false
 
 	const navigate = useNavigate();
@@ -55,7 +57,9 @@ const Review = () => {
 
 		setBonus({ easy: userData.easyBonus ?? 3, ok: userData.okBonus ?? 2, hard: userData.hardBonus ?? 1 })
 
-		if (learnedToday == learnLimit) {
+		const definitiveCards = mazo ? cards.filter(card => !card["due date"]).slice(0, learnLimit - learnedToday) : cards.filter(card => new Date(card["due date"]) <= new Date())
+
+		if (learnedToday == learnLimit && definitiveCards.length == 0) {
 			notifications.showNotification({
 				title: "Limite alcanzado",
 				message: "Ya has alcanzado el limite de tarjetas nuevas que puedes aprender hoy",
@@ -63,7 +67,6 @@ const Review = () => {
 			})
 		}
 
-		const definitiveCards = mazo ? cards.filter(card => !card["due date"]).slice(0, learnLimit - learnedToday) : cards.filter(card => new Date(card["due date"]) <= new Date())
 		setCards(definitiveCards)
 		setTotal(definitiveCards.length)
 
@@ -98,11 +101,11 @@ const Review = () => {
 
 	const next_card = (correct) => {
 
-		const updateCard = (newDueDate, newInterval) => {
+		const updateCard = (newDueDate, newInterval, failed) => {
 			const db = getFirestore()
 			const user = getAuth().currentUser
 			const cardRef = doc(db, "users", user.uid, "mazos", cards[0].mazoId, "tarjetas", cards[0].uid)
-			updateDoc(cardRef, { "due date": newDueDate.toDateString(), "interval": newInterval })
+			updateDoc(cardRef, cleanObject({ "due date": newDueDate.toDateString(), "interval": newInterval, "failed": failed }))
 		}
 
 		const incrementLearned = () => {
@@ -126,9 +129,8 @@ const Review = () => {
 					bonus.hard
 
 
-
 			const newInterval = Math.round(cards[0].interval * (2 + multiplier));
-			updateCard(newDueDate, newInterval)
+			updateCard(newDueDate, newInterval, false)
 			if (learning) {
 				incrementLearned()
 			}
@@ -137,9 +139,10 @@ const Review = () => {
 
 			advanceOrEnd(tail)
 		} else {
+			// TODO break correct answer streak
 			const newDueDate = new Date();
 			const newInterval = 1;
-			updateCard(newDueDate, newInterval)
+			updateCard(newDueDate, newInterval, true)
 			// add card to the back
 			const [head, ...tail] = cards;
 			setCards([...tail, head])
@@ -205,6 +208,7 @@ const Review = () => {
 								<div style={{ position: "absolute", top: "0", right: "0", margin: "2em", color: color }} >
 									{seconds}<Clock size={18} style={{ width: 17 }}></Clock>
 								</div>
+								{ /* TODO change this for a new/failed/pending kind of thing */}
 								<div style={{ position: "absolute", top: "0", left: "0", margin: "2em" }} >
 									<Text>{total - cards.length}/{total}</Text>
 								</div>

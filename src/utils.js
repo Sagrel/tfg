@@ -13,3 +13,14 @@ export const isToday = (date) => {
 	const today = new Date();
 	return sameDay(date, today)
 }
+
+
+// Quita todas las propiedades undefined, esto hace falta porque firebase explota si una propiedad es undefined
+export const cleanObject = (obj) => {
+	for (const key in obj) {
+		if (obj[key] === undefined) {
+			delete obj[key];
+		}
+	}
+	return obj
+}
