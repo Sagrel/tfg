@@ -1,4 +1,5 @@
 import { ActionIcon, Button, Group, NumberInput, Stack, Text, useMantineColorScheme } from "@mantine/core";
+import { useNotifications } from "@mantine/notifications";
 import { SunIcon, MoonIcon } from '@modulz/radix-icons';
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
@@ -9,23 +10,24 @@ const Settings = () => {
     const { colorScheme, toggleColorScheme } = useMantineColorScheme();
     const dark = colorScheme === 'dark';
 
-    const [chaged, setChanged] = useState(false);
+    const notifications = useNotifications()
 
-    const [time, setTime] = useState(null);
-    const [news, setNews] = useState(null);
+    const [settings, setSettings] = useState(null)
 
     useEffect(async () => {
         const db = getFirestore();
         const userRef = doc(db, "users", getAuth().currentUser.uid);
         const user_data = await (await getDoc(userRef)).data();
-        setTime(user_data.timer);
-        setNews(user_data.learnLimit);
+        setSettings({
+            timer: user_data.timer, learnLimit: user_data.learnLimit, easyBonus: user_data.easyBonus, okBonus: user_data.okBonus, hardBonus: user_data.hardBonus,
+        })
     }, [])
 
     return (
         <Stack style={{ height: "100vh", width: "70vw" }}>
             <Text size="xl">Ajustes</Text>
-            <Group>
+
+            <Group grow>
                 <Text>Cambiar el tema</Text>
                 <ActionIcon
                     variant="outline"
@@ -40,32 +42,44 @@ const Settings = () => {
                     )}
                 </ActionIcon>
             </Group>
-            <Group>
+            <Group grow>
                 <Text>Tiempo maximo de repaso</Text>
-                <NumberInput value={time} onChange={(t) => {
-                    setTime(t)
-                    setChanged(true)
-                }} max={100}
-                    min={0}></NumberInput>
+                <NumberInput value={settings?.timer} onChange={(t) => setSettings(old => ({ ...old, timer: t }))} max={100} min={0} />
             </Group>
-            <Group>
+            <Group grow>
                 <Text>Tarjetas nuevas por día</Text>
-                <NumberInput value={news} onChange={(t) => {
-                    setNews(t)
-                    setChanged(true)
-                }} max={999}
-                    min={0}></NumberInput>
+                <NumberInput value={settings?.learnLimit} onChange={(t) => setSettings(old => ({ ...old, learnLimit: t }))} max={999} min={0} />
             </Group>
-            <Button disabled={!chaged} onClick={async () => {
-                const db = getFirestore();
-                const userRef = doc(db, "users", getAuth().currentUser.uid);
-                await updateDoc(userRef, {
-                    timer: time,
-                    learnLimit: news
-                });
-                setChanged(false);
+            <Group grow>
+                <Text>Bonus dificil</Text>
+                <NumberInput value={settings?.hardBonus} onChange={(t) => setSettings(old => ({ ...old, hardBonus: t }))} max={999} min={0} precision={2} />
+            </Group>
+            <Group grow>
+                <Text>Bonus ok</Text>
+                <NumberInput value={settings?.okBonus} onChange={(t) => setSettings(old => ({ ...old, okBonus: t }))} max={999} min={0} precision={2} />
+            </Group>
+            <Group grow>
+                <Text>Bonus facil</Text>
+                <NumberInput value={settings?.easyBonus} onChange={(t) => setSettings(old => ({ ...old, easyBonus: t }))} max={999} min={0} precision={2} />
+            </Group>
+            <Button onClick={async () => {
+                try {
+                    const db = getFirestore();
+                    const userRef = doc(db, "users", getAuth().currentUser.uid);
+                    await updateDoc(userRef, settings);
+                    notifications.showNotification({
+                        title: "Ajustes guardados",
+                        color: "green"
+                    })
+                } catch (e) {
+                    notifications.showNotification({
+                        title: "Ha habido un error, prueba más tarde",
+                        color: "red"
+                    })
+                    console.error(e)
+                }
             }}>Guardar cambios</Button>
-        </Stack>
+        </Stack >
     )
 }
 export default Settings;

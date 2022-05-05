@@ -19,6 +19,8 @@ const Review = () => {
 	const navigate = useNavigate();
 	const notifications = useNotifications();
 
+	const [bonus, setBonus] = useState(null)
+
 	const [timeLimit, setTimeLimit] = useState(100);
 	const [seconds, setSeconds] = useState(timeLimit);
 	const [isActive, setIsActive] = useState(false);
@@ -50,6 +52,8 @@ const Review = () => {
 		const userData = await (await getDoc(doc(db, "users", user.uid))).data()
 		const learnedToday = userData.learnedToday ?? 0
 		const learnLimit = userData.learnLimit ?? 10
+
+		setBonus({ easy: userData.easyBonus ?? 3, ok: userData.okBonus ?? 2, hard: userData.hardBonus ?? 1 })
 
 		if (learnedToday == learnLimit) {
 			notifications.showNotification({
@@ -114,7 +118,16 @@ const Review = () => {
 			const newDueDate = new Date()
 			newDueDate.setDate(newDueDate.getDate() + cards[0].interval)
 
-			const newInterval = Math.round(cards[0].interval * (2 + time_passed_percentage / 100));
+			const multiplier = time_passed_percentage > 66 ?
+				bonus.easy
+				: time_passed_percentage > 33 ?
+					bonus.ok
+					:
+					bonus.hard
+
+
+
+			const newInterval = Math.round(cards[0].interval * (2 + multiplier));
 			updateCard(newDueDate, newInterval)
 			if (learning) {
 				incrementLearned()
@@ -202,11 +215,8 @@ const Review = () => {
 									<Text>{frase}</Text>
 								</Center>
 								{buttoms}
-
-
 							</Stack>
 					}
-
 				</Card>
 			</Center>
 		</Paper>

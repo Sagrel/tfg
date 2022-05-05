@@ -14,7 +14,8 @@ const Level = ({ elem }) => {
     const [opened, setOpened] = useState(false);
     const navigate = useNavigate();
 
-
+    // TODO say the number of pending reviews and allow for reviewing and learning new at the same time. (Maybe divide the ring progress into diferent sections like in the example)
+    // https://mantine.dev/core/ring-progress/
     let ring = p == elem.total ?
         (<RingProgress
             sections={[{ value: 100, color: 'teal' }]}
