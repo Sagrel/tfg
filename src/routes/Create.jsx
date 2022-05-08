@@ -47,7 +47,6 @@ const save = async (title, content, notes, cards, notifications, id, deletedCard
 				delete card["id"]
 				updateDoc(cardRef, card)
 			} else {
-				// TODO make this interval a setting
 				const interval = 1;
 				await addDoc(tarjetasRef, { interval, ...card })
 			}
@@ -79,7 +78,6 @@ const save = async (title, content, notes, cards, notifications, id, deletedCard
 }
 
 
-// TODO Hide this?
 const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
 
 const CardEditModal = ({ index, cards, close, setCards, setDeletedCards }) => {
@@ -294,60 +292,66 @@ const Create = () => {
 	return (
 		<Paper style={{ width: "100vw", height: "100vh" }} radius={0}>
 			<ScrollArea style={{ height: "100vh", width: "100vw" }} type="never">
-				<Stack align="center" justify="center" style={{ width: "94%", height: "100%", paddingLeft: "2%", paddingRight: "2%" }}>
-					<h3>Titulo</h3>
-					<TextInput value={title} onChange={(e) => setTitle(e.currentTarget.value)} required></TextInput>
-					<h3>Contenido</h3>
-					<RichTextEditor value={content} onChange={setContent} onImageUpload={handleImageUpload} />
-					<h3>Tarjetas</h3>
-					<SimpleGrid cols={4}>
-						<AddPreview activate={() => setSelectedCard(-2)}></AddPreview>
-						{
-							// TODO Si el titleFront no es unico explota todo
-							cards.map(({ titleFront }, idx) =>
-								<CardPreview key={titleFront} name={titleFront} setSelected={() => setSelectedCard(idx)} />
-							)
-						}
-					</SimpleGrid>
-					<h3>Notas</h3>
-					<SimpleGrid cols={4}>
-						<AddPreview activate={() => setSelectedNote(-2)}></AddPreview>
-						{
-							// TODO Si el title no es unico explota todo
-							notes.map(({ title }, idx) =>
-								<CardPreview key={title} name={title} setSelected={() => setSelectedNote(idx)} />
-							)
-						}
-					</SimpleGrid>
-					{
-						// Modal de editar/crear tarjeta
-						(selectedCard != -1) &&
-						<CardEditModal index={selectedCard} cards={cards} setCards={setCards} close={() => setSelectedCard(-1)} setDeletedCards={setDeletedCards} ></CardEditModal>
-					}
-					{
-						// Modal de editar/crear nota
-						(selectedNote != -1) &&
-						<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)} setDeletedNotes={setDeletedNotes} ></NoteEditModal >
-					}
-					<Group grow>
-						<Button color="red" onClick={() => {
-							// TODO add some sort of verification pop up for this
-							if (idMazo) {
-								const user = getAuth().currentUser;
-								const db = getFirestore();
-								const mazoRef = doc(db, 'users', user.uid, "mazos", idMazo);
-								deleteDoc(mazoRef)
-							}
-							navigate("/")
-						}}>
-							{idMazo ? "Eliminar" : "Cancelar"}
-						</Button>
-						<Button color="green" onClick={() => save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes).then(navigate("/"))}>
-							Guardar
-						</Button>
+				<form onSubmit={() => {
+					save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes).then(navigate("/"))
+				}}>
 
-					</Group>
-				</Stack>
+					<Stack align="center" justify="center" style={{ width: "94%", height: "100%", paddingLeft: "2%", paddingRight: "2%" }}>
+						<h3>Titulo</h3>
+						<TextInput value={title} onChange={(e) => setTitle(e.currentTarget.value)} required></TextInput>
+						<h3>Contenido</h3>
+						<RichTextEditor value={content} onChange={setContent} onImageUpload={handleImageUpload} />
+						<h3>Tarjetas</h3>
+						<SimpleGrid cols={4}>
+							<AddPreview activate={() => setSelectedCard(-2)}></AddPreview>
+							{
+								// TODO Si el titleFront no es unico explota todo
+								cards.map(({ titleFront }, idx) =>
+									<CardPreview key={titleFront} name={titleFront} setSelected={() => setSelectedCard(idx)} />
+								)
+							}
+						</SimpleGrid>
+						<h3>Notas</h3>
+						<SimpleGrid cols={4}>
+							<AddPreview activate={() => setSelectedNote(-2)}></AddPreview>
+							{
+								// TODO Si el title no es unico explota todo
+								notes.map(({ title }, idx) =>
+									<CardPreview key={title} name={title} setSelected={() => setSelectedNote(idx)} />
+								)
+							}
+						</SimpleGrid>
+						{
+							// Modal de editar/crear tarjeta
+							(selectedCard != -1) &&
+							<CardEditModal index={selectedCard} cards={cards} setCards={setCards} close={() => setSelectedCard(-1)} setDeletedCards={setDeletedCards} ></CardEditModal>
+						}
+						{
+							// Modal de editar/crear nota
+							(selectedNote != -1) &&
+							<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)} setDeletedNotes={setDeletedNotes} ></NoteEditModal >
+						}
+						<Group grow>
+							<Button color="red" onClick={() => {
+								// TODO add some sort of verification pop up for this
+								if (idMazo) {
+									const user = getAuth().currentUser;
+									const db = getFirestore();
+									const mazoRef = doc(db, 'users', user.uid, "mazos", idMazo);
+									deleteDoc(mazoRef)
+								}
+								navigate("/")
+							}}>
+								{idMazo ? "Eliminar" : "Cancelar"}
+							</Button>
+							<Button color="green" type="submit">
+								Guardar
+							</Button>
+
+						</Group>
+					</Stack>
+				</form>
+
 			</ScrollArea>
 		</Paper >
 	)
