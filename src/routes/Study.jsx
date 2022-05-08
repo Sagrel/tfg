@@ -16,7 +16,8 @@ const Level = ({ elem, canLearn }) => {
     const [opened, setOpened] = useState(false);
     const navigate = useNavigate();
 
-    let ring = percentageFailed == 0 && percentageFailed == 0 && percentageNew == 0 ?
+
+    let ring = percentageFailed == 0 && percentagePending == 0 && percentageNew == 0 ?
         (<RingProgress
             sections={[{ value: 100, color: 'teal' }]}
             label={
@@ -38,7 +39,7 @@ const Level = ({ elem, canLearn }) => {
 
                 <Text weight={700} align="center" size="xl">
                     <Text color="blue" weight={700} size="xl" inherit component="span">
-                        {elem.total - elem.aprendiendo}
+                        {Math.min(elem.total - elem.aprendiendo, canLearn)}
                     </Text>
                     /
                     <Text color="red" weight={700} size="xl" inherit component="span">
@@ -69,7 +70,7 @@ const Level = ({ elem, canLearn }) => {
                 withArrow
             >
                 <Stack>
-                    <Button disabled={elem.aprendiendo == elem.total || !canLearn} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
+                    <Button disabled={elem.aprendiendo == elem.total || canLearn == 0} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
                     <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
                     <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
@@ -86,7 +87,7 @@ const Study = () => {
     const [pending, setPending] = useState(0)
     const [racha, setRacha] = useState(0)
     const [mazos, setMazos] = useState([]);
-    const [canLearn, setCanLearn] = useState(true)
+    const [canLearn, setCanLearn] = useState(0)
 
     useEffect(async () => {
         const user = getAuth().currentUser;
@@ -96,7 +97,7 @@ const Study = () => {
         const userDoc = await getDoc(userRef)
         const userData = userDoc.data()
         setRacha(userData.racha ?? 0) // FIXME this happens before the change is actually done in the database
-        setCanLearn(userData.learnedToday < userData.learnLimit)
+        setCanLearn(userData.learnLimit - userData.learnedToday)
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
         // TODO should I sort this in some way?
