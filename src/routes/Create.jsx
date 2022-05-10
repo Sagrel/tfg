@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 
 import { RichTextEditor } from '@mantine/rte';
-import { ActionIcon, Button, Card, Center, Checkbox, Group, Modal, Paper, RadioGroup, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Card, Center, Checkbox, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { getAuth } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
 import { CirclePlus, Rotate360 } from "tabler-icons-react";
@@ -96,16 +96,52 @@ const save = async (title, content, notes, cards, notifications, id, deletedCard
 
 const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
 
-// TODO unificar los modales y reutilizar la logica
-// TODO usar formularios y poner los required
+const EliminarGuardar = ({ text, setModalData, setDeleted, setArray, close, original, creating, index }) => {
+	return <Group position="apart">
+		<>
+			<Button color="red" onClick={() => {
+				if (creating) {
+					close()
+				} else {
+					setModalData({
+						text: text, action: () => {
+							if (original.id) {
+								setDeleted(old => [...old, original.id])
+							}
+							setArray(old => {
+								const newArray = old.slice()
+								newArray.splice(index, 1)
+								return newArray
+							})
+							close()
+						}
+					})
+				}
 
-const CardEditModal = ({ index, cards, close, setCards, setDeletedCards }) => {
+			}}>{creating ? "Cancelar" : "Eliminar"}</Button>
+			<Button color="green" type="submit">{creating ? "Crear" : "Guardar cambios"}</Button>
+		</>
+	</Group>
+}
+
+const SaveOrCreate = (creating, setArray, close, data, index) => {
+	if (creating) {
+		setArray(old => [...old, data])
+		close()
+	} else {
+		setArray(old => {
+			const newArray = old.slice()
+			newArray[index] = data
+			return newArray
+		})
+		close()
+	}
+}
+
+const CardEditModal = ({ index, cards, close, setCards, setDeletedCards, setModalData }) => {
 	const creating = index == -2;
 	const original = creating ? { titleFront: "", dataFront: "", titleBack: "", dataBack: "" } : cards[index];
-	const [titleFront, setTitleFront] = useState(original.titleFront);
-	const [dataFront, setDataFront] = useState(original.dataFront);
-	const [titleBack, setTitleBack] = useState(original.titleBack);
-	const [dataBack, setDataBack] = useState(original.dataBack);
+	const [data, setData] = useState(original)
 	const [showBack, setShowBack] = useState(false);
 
 	const flipButton = (
@@ -116,189 +152,106 @@ const CardEditModal = ({ index, cards, close, setCards, setDeletedCards }) => {
 
 	return (
 		<Modal
+			zIndex={1}
 			opened={true}
 			centered
 			size="xl"
 			onClose={close}
 			title={"Editando el " + (showBack ? "reverso" : "frente")}
 		>
-			<Stack>
+			<form onSubmit={() => SaveOrCreate(creating, setCards, close, data, index)}>
+				<Stack>
 
-				{
-					!showBack ?
-						<>
-							<Group grow>
-								<TextInput value={titleFront} onChange={(event) => setTitleFront(event.currentTarget.value)}></TextInput>
-								{flipButton}
-							</Group>
-							<TextInput value={dataFront} onChange={(event) => setDataFront(event.currentTarget.value)}></TextInput>
-						</>
-						:
-						<>
-							<Group grow>
-								<TextInput value={titleBack} onChange={(event) => setTitleBack(event.currentTarget.value)}></TextInput>
-								{flipButton}
-							</Group>
-							<TextInput value={dataBack} onChange={(event) => setDataBack(event.currentTarget.value)}></TextInput>
-						</>
-				}
-				<Group position="apart">
 					{
-						creating ?
-							<Button color="green" onClick={() => {
-								setCards(old => [...old, { titleFront, dataFront, titleBack, dataBack }])
-								close()
-							}}>Crear</Button>
+						!showBack ?
+							<>
+								<Group grow>
+									<TextInput value={data?.titleFront} required onChange={(e) => setData(old => ({ ...old, titleFront: e.target.value }))}></TextInput>
+									{flipButton}
+								</Group>
+								<TextInput value={data?.dataFront} onChange={(e) => setData(old => ({ ...old, dataFront: e.target.value }))}></TextInput>
+							</>
 							:
 							<>
-								<Button color="red" onClick={() => {
-									if (original.id) {
-										setDeletedCards(old => [...old, original.id])
-									}
-									setCards(old => {
-										const newArray = old.slice()
-										newArray.splice(index, 1)
-										return newArray
-									})
-									close()
-								}}>Eliminar</Button>
-								<Button color="green" onClick={() => {
-									setCards(old => {
-										const newArray = old.slice()
-										// Conservo el id original y el resto de su info para poder modificar in-place
-										newArray[index] = { titleFront, dataFront, titleBack, dataBack, id: original.id, interval: original.interval, "due date": original["due date"] }
-										return newArray
-									})
-									close()
-								}}>Guardar cambios</Button>
+								<Group grow >
+									<TextInput value={data?.titleBack} required onChange={(e) => setData(old => ({ ...old, titleBack: e.target.value }))}></TextInput>
+									{flipButton}
+								</Group>
+								<TextInput value={data?.dataBack} onChange={(e) => setData(old => ({ ...old, dataBack: e.target.value }))}></TextInput>
 							</>
 					}
-				</Group>
-			</Stack>
-		</Modal>
+					<EliminarGuardar close={close} original={original} setArray={setCards} setDeleted={setDeletedCards} setModalData={setModalData} text="esta tarjeta" creating={creating} index={index} />
+				</Stack>
+			</form>
+		</Modal >
 	)
 }
 
-const NoteEditModal = ({ index, notes, close, setNotes, setDeletedNotes }) => {
+const NoteEditModal = ({ index, notes, close, setNotes, setDeletedNotes, setModalData }) => {
 	const creating = index == -2;
 	const original = creating ? { title: "", content: "" } : notes[index];
-	const [title, setTitle] = useState(original.title);
-	const [content, setContent] = useState(original.content);
+	const [data, setData] = useState(original)
 
 	return (
 		<Modal
+			zIndex={1}
 			opened={true}
 			centered
 			size="xl"
 			onClose={close}
 			title={"Editando nota"}
 		>
-			<Stack>
-				<TextInput value={title} label="Titulo" required onChange={(event) => setTitle(event.currentTarget.value)}></TextInput>
-				<RichTextEditor value={content} onChange={setContent} onImageUpload={handleImageUpload}></RichTextEditor>
-				<Group position="apart">
-					{
-						creating ?
-							<Button color="green" onClick={() => {
-								setNotes(old => [...old, { title, content }])
-								close()
-							}}>Crear</Button>
-							:
-							<>
-								<Button color="red" onClick={() => {
-									if (original.id) {
-										setDeletedNotes(old => [...old, original.id])
-									}
-									setNotes(old => {
-										const newArray = old.slice()
-										newArray.splice(index, 1)
-										return newArray
-									})
-									close()
-								}}>Eliminar</Button>
-								<Button color="green" onClick={() => {
-									setNotes(old => {
-										const newArray = old.slice()
-										// Conservo el id original para poder modificar in-place
-										newArray[index] = { title, content, id: original.id }
-										return newArray
-									})
-									close()
-								}}>Guardar cambios</Button>
-							</>
-					}
-				</Group>
-			</Stack>
-		</Modal>
+			<form onSubmit={() => SaveOrCreate(creating, setNotes, close, data, index)}>
+				<Stack>
+					<TextInput value={data?.title} label="Titulo" required onChange={(e) => setData(old => ({ ...old, title: e.target.value }))}></TextInput>
+					<RichTextEditor value={data?.content} onChange={(value) => setData(old => ({ ...old, content: value }))} required onImageUpload={handleImageUpload}></RichTextEditor>
+
+					<EliminarGuardar close={close} original={original} setArray={setNotes} setDeleted={setDeletedNotes} setModalData={setModalData} text="esta nota" creating={creating} index={index} />
+				</Stack>
+			</form>
+		</Modal >
 	)
 }
 
-const QuestionEditModal = ({ index, questions, close, setQuestions, setDeletedQuestions }) => {
+const QuestionEditModal = ({ index, questions, close, setQuestions, setDeletedQuestions, setModalData }) => {
 	const creating = index == -2;
 	const original = creating ? { title: "", options: [{ name: "", correct: false }, { name: "", correct: false }, { name: "", correct: false }, { name: "", correct: false }] } : questions[index];
-	const [title, setTitle] = useState(original.title);
-	const [options, setOptions] = useState(original.options);
+	const [data, setData] = useState(original)
+
 
 	return (
 		<Modal
+			zIndex={1}
 			opened={true}
 			centered
 			size="xl"
 			onClose={close}
 			title={"Editando pregunta"}
 		>
-			<Stack>
-				<TextInput value={title} label="Titulo" required onChange={(event) => setTitle(event.currentTarget.value)}></TextInput>
-				{
-					options.map((elem, idx) => {
-						return (
-							<Group>
-								<TextInput value={elem.name} onChange={(e) => setOptions(old => {
-									old[idx].name = e.target.value
-									return [...old]
-								})} required></TextInput>
-								<Checkbox checked={elem.correct} onChange={(e) => setOptions(old => {
-									old[idx].correct = e.target.checked
-									return [...old]
-								})}></Checkbox>
-							</Group>
-						)
-					})
-				}
-				<Group position="apart">
+			<form onSubmit={() => SaveOrCreate(creating, setQuestions, close, data, index)}>
+
+				<Stack>
+					<TextInput value={data?.title} label="Titulo" required onChange={(event) => setData(old => ({ ...old, title: event.target.value }))}></TextInput>
 					{
-						creating ?
-							<Button color="green" onClick={() => {
-								setQuestions(old => [...old, { title, options }])
-								close()
-							}}>Crear</Button>
-							:
-							<>
-								<Button color="red" onClick={() => {
-									if (original.id) {
-										setDeletedQuestions(old => [...old, original.id])
-									}
-									setQuestions(old => {
-										const newArray = old.slice()
-										newArray.splice(index, 1)
-										return newArray
-									})
-									close()
-								}}>Eliminar</Button>
-								<Button color="green" onClick={() => {
-									setQuestions(old => {
-										const newArray = old.slice()
-										// Conservo el id original para poder modificar in-place
-										newArray[index] = { title, options, id: original.id }
-										return newArray
-									})
-									close()
-								}}>Guardar cambios</Button>
-							</>
+						data.options.map((elem, idx) => {
+							return (
+								<Group>
+									<TextInput value={elem.name} onChange={(e) => setData(old => {
+										old.options[idx].name = e.target.value
+										return { ...old }
+									})} required></TextInput>
+									<Checkbox checked={elem.correct} onChange={(e) => setData(old => {
+										old.options[idx].correct = e.target.checked
+										return { ...old }
+									})}></Checkbox>
+								</Group>
+							)
+						})
 					}
-				</Group>
-			</Stack>
-		</Modal>
+					<EliminarGuardar close={close} original={original} setArray={setQuestions} setDeleted={setDeletedQuestions} setModalData={setModalData} text="esta pregunta" creating={creating} index={index} />
+				</Stack>
+			</form>
+		</Modal >
 	)
 }
 
@@ -337,7 +290,6 @@ const AddPreview = ({ activate }) => {
 }
 
 
-// TODO Add preguntas
 const Create = () => {
 	const [notes, setNotes] = useState([])
 	const [cards, setCards] = useState([])
@@ -346,7 +298,9 @@ const Create = () => {
 	const [deletedNotes, setDeletedNotes] = useState([])
 	const [deletedQuestions, setDeletedQuestions] = useState([])
 
-	const [title, setTitle] = useState("") // TODO add verification 
+	const [deleteModal, setDeleteModal] = useState(null)
+
+	const [title, setTitle] = useState("")
 	const [content, setContent] = useState("")
 
 	const notifications = useNotifications();
@@ -425,31 +379,22 @@ const Create = () => {
 								)
 							}
 						</SimpleGrid>
-						{
-							// Modal de editar/crear tarjeta
-							(selectedCard != -1) &&
-							<CardEditModal index={selectedCard} cards={cards} setCards={setCards} close={() => setSelectedCard(-1)} setDeletedCards={setDeletedCards} ></CardEditModal>
-						}
-						{
-							// Modal de editar/crear nota
-							(selectedNote != -1) &&
-							<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)} setDeletedNotes={setDeletedNotes} ></NoteEditModal >
-						}
-						{
-							// Modal de editar/crear pregunta
-							(selectedQuestion != -1) &&
-							<QuestionEditModal index={selectedQuestion} questions={questions} setQuestions={setQuestions} close={() => setSelectedQuestion(-1)} setDeletedQuestions={setDeletedQuestions} ></QuestionEditModal >
-						}
+
+
 						<Group grow>
 							<Button color="red" onClick={() => {
-								// TODO add some sort of verification pop up for this
-								if (idMazo) {
-									const user = getAuth().currentUser;
-									const db = getFirestore();
-									const mazoRef = doc(db, 'users', user.uid, "mazos", idMazo);
-									deleteDoc(mazoRef)
-								}
-								navigate("/")
+								setDeleteModal({
+									text: "esta lectura completamente", action: () => {
+										if (idMazo) {
+											const user = getAuth().currentUser;
+											const db = getFirestore();
+											const mazoRef = doc(db, 'users', user.uid, "mazos", idMazo);
+											deleteDoc(mazoRef)
+										}
+										navigate("/")
+									}
+								})
+
 							}}>
 								{idMazo ? "Eliminar" : "Cancelar"}
 							</Button>
@@ -461,6 +406,32 @@ const Create = () => {
 					</Stack>
 				</form>
 
+				{
+					// Modal de editar/crear tarjeta
+					(selectedCard != -1) &&
+					<CardEditModal index={selectedCard} cards={cards} setCards={setCards} close={() => setSelectedCard(-1)} setDeletedCards={setDeletedCards} setModalData={setDeleteModal}></CardEditModal>
+				}
+				{
+					// Modal de editar/crear nota
+					(selectedNote != -1) &&
+					<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)} setDeletedNotes={setDeletedNotes} setModalData={setDeleteModal}></NoteEditModal >
+				}
+				{
+					// Modal de editar/crear pregunta
+					(selectedQuestion != -1) &&
+					<QuestionEditModal index={selectedQuestion} questions={questions} setQuestions={setQuestions} close={() => setSelectedQuestion(-1)} setDeletedQuestions={setDeletedQuestions} setModalData={setDeleteModal} />
+				}
+				<Modal zIndex={11} opened={deleteModal != null} onClose={() => setDeleteModal(null)} centered>
+					<Text size="xl">¿Estas seguro de que quieres eliminar {deleteModal?.text}?</Text>
+					<Text size="xl">Este cambio no se puede deshacer</Text>
+					<Group grow>
+						<Button onClick={() => {
+							deleteModal?.action()
+							setDeleteModal(null)
+						}} color="red">Eliminar</Button>
+						<Button onClick={() => setDeleteModal(null)} color="blue">Cancelar</Button>
+					</Group>
+				</Modal>
 			</ScrollArea>
 		</Paper >
 	)
