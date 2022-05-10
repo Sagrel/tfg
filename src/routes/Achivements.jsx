@@ -11,7 +11,7 @@ const Achivement = ({ milestones, progress }) => {
             lineWidth={4} >
             {
                 milestones.map(({ nombre, logro, puntos }) => {
-                    return (<Timeline.Item title={nombre} key={nombre}>
+                    return (<Timeline.Item title={nombre} key={nombre + logro}>
                         <Text color="dimmed" size="sm"> {logro}</Text>
                         <Text size="xs" mt={4}>{progress >= puntos ? "Conseguido" : `Progreso: ${progress}/${puntos}`}</Text>
                     </Timeline.Item>
@@ -43,13 +43,12 @@ const Achivements = () => {
     ]
 
 
-    // TODO Add a key to Achivement to remove errors in the console
-    // TODO make it better looking
+    // TODO make this better looking
     return (
         <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
             <Center>
                 <SimpleGrid cols={2} >
-                    {achivements.map((e) => <Achivement {...e} key={e.name}></Achivement>)}
+                    {achivements.map((e, idx) => <Achivement {...e} key={idx}></Achivement>)}
                 </SimpleGrid >
             </Center>
         </ScrollArea>

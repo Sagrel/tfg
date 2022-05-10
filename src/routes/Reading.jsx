@@ -7,7 +7,6 @@ import { ActionIcon, Button, Card, Center, Checkbox, Divider, Group, Paper, Scro
 import { Check, PlayerPlay, PlayerTrackNext, PlayerTrackPrev, X } from "tabler-icons-react";
 
 
-// TODO load preguntas and display them at the end
 const Reading = () => {
 
 	const { tema } = useParams()

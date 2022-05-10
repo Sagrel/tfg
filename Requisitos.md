@@ -7,7 +7,7 @@
    1. Estudiar tarjetas nuevas.
    2. Acceder a las notas.
    3. Acceder a la lectura.
-   4. Realizar un test de conocimiento. // TODO
+   4. Realizar un test de conocimiento. 
 6. El usuario podrá repasar todas sus tarjetas de conocimiento pendientes.
 7. El usuario podrá ver sus estadisticas: repasos promedios por día, número de palabrás aprendidas, ... // TODO
 
@@ -16,7 +16,7 @@
 1. El usurario podrá crear una nueva lectura, que puede contener texto, imagenes y videos.
 2. El usuario podrá añadir tarjetas de repaso asociadas a una lectura (tarjetas de vocabulario por ejemplo). Estas tarjetas tendrán dos caras, una en ingles donde se mostrará el contenido a aprender y una frase donde se utilice y la otra en la que se mostrará la traducción e información adicional en caso de ser necesario.
 3. El usuario podrá añadir notas explicativas, con contenido multimedia, a una lectura.
-4. El usuario podrá añadir preguntas de selección multiple a una lectura. // TODO
+4. El usuario podrá añadir preguntas de selección multiple a una lectura. 
 
 
 # Requisitos del sistema de logros 

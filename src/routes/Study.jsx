@@ -5,8 +5,6 @@ import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
 
-
-
 const Level = ({ elem, canLearn }) => {
     const percentageLearning = Math.round((elem.aprendiendo - elem.pendientes) / elem.total * 100);
     const percentageFailed = Math.round(elem.fallidas / elem.total * 100);
@@ -123,7 +121,7 @@ const Study = () => {
     }, [])
 
     return (
-        <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
+        <ScrollArea style={{ height: "100vh", width: "80vw" }} p="lg" type="never">
             <Stack>
                 <Group position="center" grow>
                     <Button onClick={() => { navigate("review") }}>
@@ -144,8 +142,8 @@ const Study = () => {
                     }
                 </SimpleGrid>
             </Stack>
-
-        </ScrollArea>)
+        </ScrollArea>
+    )
 
 }
 
