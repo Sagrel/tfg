@@ -45,15 +45,16 @@ const Login = () => {
 						const auth = getAuth();
 						// The navigation and notification are handeled in the useEffect
 						signInWithEmailAndPassword(auth, email, password)
-							.then(() => {
+							.then((userCredentials) => {
 								notifications.clean();
 								notifications.showNotification({
 									title: "Sesión iniciada",
-									message: `Bienvenido ${user.displayName}`,
+									message: `Bienvenido ${userCredentials.user.displayName}`,
 									color: "green"
 								})
 							})
-							.catch((_) => {
+							.catch((error) => {
+								console.error(error)
 								notifications.showNotification({
 									title: "Error inicio de sesión",
 									message: "Los datos son incorrectos",
