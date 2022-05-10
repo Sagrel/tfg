@@ -1,10 +1,10 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
 import { RichTextEditor } from '@mantine/rte';
 import { getAuth } from "firebase/auth";
-import { ActionIcon, Center, Group, Paper, ScrollArea, Space, Stack, Text } from "@mantine/core";
-import { PlayerPlay, PlayerTrackNext, PlayerTrackPrev } from "tabler-icons-react";
+import { ActionIcon, Button, Card, Center, Checkbox, Divider, Group, Paper, ScrollArea, Space, Stack, Text } from "@mantine/core";
+import { Check, PlayerPlay, PlayerTrackNext, PlayerTrackPrev, X } from "tabler-icons-react";
 
 
 // TODO load preguntas and display them at the end
@@ -13,9 +13,12 @@ const Reading = () => {
 	const { tema } = useParams()
 
 	const [mazo, setMazo] = useState(null)
-	// TODO divide the text in sentences and play the audio sentence by sentence
 	const [sentences, setSentences] = useState([])
+	const [questions, setQuestions] = useState([])
 	const [current, setCurrent] = useState(0)
+	const [showTest, setShowTest] = useState(false)
+	const [answers, setAnswers] = useState([])
+	const [showResults, setShowResults] = useState(false)
 
 	useEffect(async () => {
 		const user = getAuth().currentUser;
@@ -25,7 +28,20 @@ const Reading = () => {
 		const mazoDoc = await getDoc(mazoRef);
 		setMazo({ id: mazoDoc.id, ...mazoDoc.data() })
 		setSentences(getSentences(getText(mazoDoc.data().content)))
+
+		// TODO set the number of questions lo load as a setting
+		const preguntasRef = collection(db, mazoRef.path, "preguntas")
+		const preguntasDocs = await getDocs(preguntasRef)
+		const preguntasData = preguntasDocs.docs.map(doc => doc.data())
+		setQuestions(preguntasData)
+		setAnswers(preguntasData.map(
+			(pregunta) =>
+				pregunta.options.map((option) => ({ checked: false, correct: option.correct }))
+		)
+		)
 	}, [])
+
+	const aciertos = answers.map(question => question.every(({ checked, correct }) => checked == correct) ? 1 : 0).reduce((a, b) => a + b, 0)
 
 	return (
 		<Paper style={{ width: "100vw", height: "100vh" }} radius={0}>
@@ -68,6 +84,72 @@ const Reading = () => {
 							</Center>
 						</Stack>
 					</Center>
+					<Divider></Divider>
+
+
+					{
+						!showTest ?
+							<Center>
+								<Button onClick={() => setShowTest(true)}>Realizar prueba</Button>
+							</Center>
+							:
+							<>
+								{
+									questions.map((q, idx) => {
+										return (
+											<Card>
+
+												<Stack justify={"flex-start"}>
+													<Text>{idx + 1}. {q.title}</Text>
+													{
+														q.options.map((o, idx2) => {
+
+															const isWrong = showResults && answers[idx][idx2].checked != answers[idx][idx2].correct
+
+															const icon = ({ indeterminate, className }) =>
+																answers[idx][idx2].correct ? <Check className={className} /> : <X className={className} />;
+
+															const conditional = isWrong ? { color: "red", icon: icon } : {}
+
+															return (
+
+																<Group align={"flex-start"}>
+																	<Checkbox
+																		{...conditional}
+																		checked={answers[idx][idx2].checked || isWrong}
+																		onChange={(e) => {
+																			if (!showResults)
+																				setAnswers(old => {
+																					old[idx][idx2].checked = e.target.checked
+																					return [...old]
+																				})
+																		}}
+																	></Checkbox>
+																	<Text>{o.name}</Text>
+																</Group>
+															)
+														})
+													}
+												</Stack>
+											</Card>
+										)
+									})
+								}
+								<Center>
+									{
+										// TODO incrementar logros si haciertas todas la preguntas
+										!showResults ?
+											<Button onClick={() => {
+												setShowResults(true)
+											}}>Revisar</Button>
+											:
+											<Text>Has hacertado {aciertos} de {answers.length}. Volver a  <Link to={"/"}>incicio</Link> </Text>
+									}
+								</Center>
+							</>
+
+					}
+
 				</ScrollArea>
 			</Center >
 		</Paper >

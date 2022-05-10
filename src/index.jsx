@@ -92,7 +92,7 @@ const Index = () => {
           updateDoc(userRef, { racha: (userDoc.data().racha ?? 1) + 1, lastSignInTime: today, learnedToday: 0 })
         } else {
           // TODO Show notification somewhere    
-          updateDoc(userRef, { racha: 0, lastSignInTime: today, learnedToday: 0 })
+          updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0 })
         }
       }
     });
