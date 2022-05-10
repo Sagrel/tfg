@@ -353,9 +353,8 @@ const Create = () => {
 						<SimpleGrid cols={4}>
 							<AddPreview activate={() => setSelectedCard(-2)}></AddPreview>
 							{
-								// TODO Si el titleFront no es unico explota todo
-								cards.map(({ titleFront }, idx) =>
-									<CardPreview key={titleFront} name={titleFront} setSelected={() => setSelectedCard(idx)} />
+								cards.map(({ titleFront, id }, idx) =>
+									<CardPreview key={titleFront + id} name={titleFront} setSelected={() => setSelectedCard(idx)} />
 								)
 							}
 						</SimpleGrid>
@@ -363,9 +362,8 @@ const Create = () => {
 						<SimpleGrid cols={4}>
 							<AddPreview activate={() => setSelectedNote(-2)}></AddPreview>
 							{
-								// TODO Si el title no es unico explota todo
-								notes.map(({ title }, idx) =>
-									<CardPreview key={title} name={title} setSelected={() => setSelectedNote(idx)} />
+								notes.map(({ title, id }, idx) =>
+									<CardPreview key={title + id} name={title} setSelected={() => setSelectedNote(idx)} />
 								)
 							}
 						</SimpleGrid>
@@ -373,9 +371,8 @@ const Create = () => {
 						<SimpleGrid cols={4}>
 							<AddPreview activate={() => setSelectedQuestion(-2)}></AddPreview>
 							{
-								// TODO Si el title no es unico explota todo
-								questions.map(({ title }, idx) =>
-									<CardPreview key={title} name={title} setSelected={() => setSelectedQuestion(idx)} />
+								questions.map(({ title, id }, idx) =>
+									<CardPreview key={title + id} name={title} setSelected={() => setSelectedQuestion(idx)} />
 								)
 							}
 						</SimpleGrid>
@@ -422,8 +419,9 @@ const Create = () => {
 					<QuestionEditModal index={selectedQuestion} questions={questions} setQuestions={setQuestions} close={() => setSelectedQuestion(-1)} setDeletedQuestions={setDeletedQuestions} setModalData={setDeleteModal} />
 				}
 				<Modal zIndex={11} opened={deleteModal != null} onClose={() => setDeleteModal(null)} centered>
-					<Text size="xl">¿Estas seguro de que quieres eliminar {deleteModal?.text}?</Text>
-					<Text size="xl">Este cambio no se puede deshacer</Text>
+
+					<Text size="xl" align="center">¿Estas seguro de que quieres eliminar {deleteModal?.text}?</Text>
+					<Text size="xl" align="center" my="md">Este cambio <Text component="span" weight={700}>NO</Text> se puede deshacer</Text>
 					<Group grow>
 						<Button onClick={() => {
 							deleteModal?.action()
