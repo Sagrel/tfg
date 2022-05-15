@@ -25,6 +25,17 @@
 3. El usuario podrá desbloquear "titulos" al obtener logros. // TODO
 4. El usuario podrá equiparse un "titulo", el cual se mostrará junto a su nombre. // TODO
 5. El usuario recibirá "puntos de comprension" al completar repasos. La cantidad de puntos dependerá de su velocidad al responder. // TODO
+6. Los logros seran:
+   - Dias de rachas seguidos: Tenaz
+   - Repasos correctos: Erudito
+   - Aprender x palabras: Sabelo todo
+   - No fallar en x repasos: Maestro infalible
+   - Hacer lecciones en fines de semana: El que persiste
+   - Añadir una foto de perfil: Fotogenico
+   - Crear una leccion: Creador de conocimiento
+   - Terminar una leccion: Terminator
+   - Responder un test bien: Estudiante modelo
+   - Leer notas: Empollón
 
 # Requisitos de monitorización del progreso
 1. Si el usuario tiene el rol de profesor podrá generar un enlace que permitirá a sus alumnos asociarle como profesor. // TODO
