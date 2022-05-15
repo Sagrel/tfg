@@ -1,56 +1,83 @@
-import { Center, ScrollArea, SimpleGrid, Text, Timeline } from "@mantine/core"
+import { Center, RingProgress, ScrollArea, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core"
+import { getAuth } from "firebase/auth"
+import { doc, getDoc, getFirestore } from "firebase/firestore"
+import { useState, useEffect } from "react"
+import { Star } from "tabler-icons-react"
 
 
+const Achivement = ({ name, logro, milestones, progress }) => {
+    const active = milestones.findIndex((puntos) => puntos > progress)
+    const nivel = active == -1 ? milestones.length : active;
+    const target = milestones[active]
 
-const Achivement = ({ milestones, progress }) => {
-    const active = milestones.findIndex(({ puntos }) => puntos > progress)
     return (
-        <Timeline
-            active={active == -1 ? milestones.length : active - 1}
-            bulletSize={20}
-            lineWidth={4} >
-            {
-                milestones.map(({ nombre, logro, puntos }) => {
-                    return (<Timeline.Item title={nombre} key={nombre + logro}>
-                        <Text color="dimmed" size="sm"> {logro}</Text>
-                        <Text size="xs" mt={4}>{progress >= puntos ? "Conseguido" : `Progreso: ${progress}/${puntos}`}</Text>
-                    </Timeline.Item>
-                    )
-                })
-            }
-        </Timeline >
+        <Stack justify="center" align="center">
+            <h2>{name + " Lvl." + (nivel == milestones.length ? "Max" : nivel)}</h2>
+            <RingProgress
+                sections={[{ value: (progress / target) * 100, color: active == -1 ? "yellow" : "teal" }]}
+                label={
+                    active == -1 ?
+                        < Center >
+                            <ThemeIcon color="yellow" variant="light" radius="xl" size="xl">
+                                <Star size={22} />
+                            </ThemeIcon>
+                        </Center >
+                        :
+                        <Text align="center" size="xl" weight="bold">{progress} / {target} </Text>
+                }
+            />
+            <Text>{target ? logro.replace("%", target) : "¡Has completado este logo!"}</Text>
+        </Stack>
     )
 }
 
 const Achivements = () => {
 
+    const defaultAchivements = {
+        "Tenaz": { logro: "Consigue una racha de % días", milestones: [5, 15, 40, 100], progress: 0 },
+        "Erudito": { logro: "Acierta % repasos", milestones: [5, 15, 40, 100, 200], progress: 0 },
+        "Sabelo todo": { logro: "Aprende % tarjetas nuevas", milestones: [10, 25, 75, 150, 300, 500, 750, 1000], progress: 0 },
+        "Infalible": { logro: "Acierta % repasos seguidos", milestones: [5, 15, 40, 100, 200], progress: 0 },
+        "El que persiste": { logro: "Inicia sesion % fines de semana", milestones: [2, 5, 10, 20, 50], progress: 0 },
+        "Fotogenico": { logro: "Añade % foto de perfil", milestones: [1], progress: 0 },
+        "Creador de conocimiento": { logro: "Crea % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+        "Terminator": { logro: "Termina % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+        "Estudiante modelo": { logro: "Aprueba % test csin fallos", milestones: [2, 5, 10, 20, 35], progress: 0 },
+        "Empollon": { logro: "Lee las notas de % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+    }
 
-    const achivements = [
-        {
-            milestones: [
-                { nombre: "Aprendiz", logro: "Aprende 20 palabras", puntos: "20" },
-                { nombre: "Intermedio", logro: "Aprende 50 palabras", puntos: "50" },
-                { nombre: "Nativo", logro: "Aprende 100 palabras", puntos: "100" }
-            ], progress: 69
-        },
-        {
-            milestones: [
-                { nombre: "Empezando", logro: "Conectate 2 dias seguidos", puntos: "2" },
-                { nombre: "Motivado", logro: "Conectate 10 dias seguidos", puntos: "10" },
-                { nombre: "Maestro de los habitos", logro: "Conectate 40 dias seguidos", puntos: "40" }
-            ], progress: 1
-        }
-    ]
+    const [achivements, setAchivements] = useState(defaultAchivements)
+
+    useEffect(async () => {
+        const db = getFirestore();
+        const userRef = doc(db, "users", getAuth().currentUser.uid);
+        const user_data = await (await getDoc(userRef)).data();
+
+        defaultAchivements.Tenaz.progress = user_data.Tenaz ?? 0
+        defaultAchivements.Erudito.progress = user_data.Erudito ?? 0
+        defaultAchivements["Sabelo todo"].progress = user_data["Sabelo todo"] ?? 0
+        defaultAchivements.Infalible.progress = user_data.Infalible ?? 0
+        defaultAchivements["El que persiste"].progress = user_data["El que persiste"] ?? 0
+        defaultAchivements.Fotogenico.progress = user_data.Fotogenico ?? 0
+        defaultAchivements["Creador de conocimiento"].progress = user_data["Creador de conocimiento"] ?? 0
+        defaultAchivements.Terminator.progress = user_data.Terminator ?? 0
+        defaultAchivements["Estudiante modelo"].progress = user_data["Estudiante modelo"] ?? 0
+        defaultAchivements.Empollon.progress = user_data.Empollon ?? 0
+        setAchivements({ ...defaultAchivements })
+    }, [])
 
 
-    // TODO make this better looking
     return (
         <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
-            <Center>
-                <SimpleGrid cols={2} >
-                    {achivements.map((e, idx) => <Achivement {...e} key={idx}></Achivement>)}
-                </SimpleGrid >
-            </Center>
+
+            <SimpleGrid cols={2} p="lg">
+                {Object.keys(achivements).map(key =>
+                    <Center>
+                        <Achivement {...achivements[key]} name={key} key={key}></Achivement>
+                    </Center>
+                )}
+            </SimpleGrid >
+
         </ScrollArea>
     )
 }
