@@ -8,6 +8,7 @@ import { CirclePlus, Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
 import { cleanObject } from "../utils";
+import { handleImageUpload } from "../utils";
 
 
 
@@ -94,7 +95,6 @@ const save = async (title, content, notes, cards, notifications, id, deletedCard
 }
 
 
-const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
 
 const EliminarGuardar = ({ text, setModalData, setDeleted, setArray, close, original, creating, index }) => {
 	return <Group position="apart">
@@ -266,20 +266,8 @@ const CardPreview = ({ name, setSelected }) => {
 	)
 }
 
-const handleImageUpload = (file) =>
-	new Promise((resolve, reject) => {
-		const formData = new FormData();
-		formData.append('image', file);
 
-		fetch('https://api.imgbb.com/1/upload?key=' + apiKey, {
-			method: 'POST',
-			body: formData,
-		})
-			.then((response) => response.json())
-			.then((result) => resolve(result.data.url))
-			.catch(() => reject(new Error('Upload failed')));
-	}
-	)
+
 
 const AddPreview = ({ activate }) => {
 	return (

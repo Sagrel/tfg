@@ -24,3 +24,20 @@ export const cleanObject = (obj) => {
 	}
 	return obj
 }
+
+export const handleImageUpload = (file) => {
+	const apiKey = "2f96d4553b7ba2244a0ce62f3d3d749b";
+
+	return new Promise((resolve, reject) => {
+		const formData = new FormData();
+		formData.append('image', file);
+
+		fetch('https://api.imgbb.com/1/upload?key=' + apiKey, {
+			method: 'POST',
+			body: formData,
+		})
+			.then((response) => response.json())
+			.then((result) => resolve(result.data.url))
+			.catch(() => reject(new Error('Upload failed')));
+	})
+}

@@ -1,7 +1,7 @@
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { TextInput, Checkbox, Button, Group, Box, } from '@mantine/core';
 import { useNotifications } from "@mantine/notifications";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { doc, getFirestore, setDoc } from "firebase/firestore";
 // TODO Add option to register as proffesor 
 const Register = () => {
