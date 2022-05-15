@@ -26,16 +26,16 @@
 4. El usuario podrá equiparse un "titulo", el cual se mostrará junto a su nombre. // TODO
 5. El usuario recibirá "puntos de comprension" al completar repasos. La cantidad de puntos dependerá de su velocidad al responder. // TODO
 6. Los logros seran:
-   - Dias de rachas seguidos: Tenaz
-   - Repasos correctos: Erudito
-   - Aprender x palabras: Sabelo todo
-   - No fallar en x repasos: Maestro infalible
-   - Hacer lecciones en fines de semana: El que persiste
-   - Añadir una foto de perfil: Fotogenico
-   - Crear una leccion: Creador de conocimiento
-   - Terminar una leccion: Terminator
-   - Responder un test bien: Estudiante modelo
-   - Leer notas: Empollón
+   - Dias de rachas seguidos: Tenaz       // TODO show notification
+   - Repasos correctos: Erudito           // TODO 
+   - Aprender x palabras: Sabelo todo     // TODO
+   - No fallar en x repasos: Maestro infalible  // TODO
+   - Hacer lecciones en fines de semana: El que persiste // TODO
+   - Añadir una foto de perfil: Fotogenico   // TODO
+   - Crear una leccion: Creador de conocimiento // TODO
+   - Terminar una leccion: Terminator  // TODO
+   - Responder un test bien: Estudiante modelo  // TODO
+   - Leer notas: Empollón  // TODO
 
 # Requisitos de monitorización del progreso
 1. Si el usuario tiene el rol de profesor podrá generar un enlace que permitirá a sus alumnos asociarle como profesor. // TODO

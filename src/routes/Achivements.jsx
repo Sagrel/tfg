@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth"
 import { doc, getDoc, getFirestore } from "firebase/firestore"
 import { useState, useEffect } from "react"
 import { Star } from "tabler-icons-react"
+import { defaultAchivements } from "../utils"
 
 
 const Achivement = ({ name, logro, milestones, progress }) => {
@@ -14,6 +15,7 @@ const Achivement = ({ name, logro, milestones, progress }) => {
         <Stack justify="center" align="center">
             <h2>{name + " Lvl." + (nivel == milestones.length ? "Max" : nivel)}</h2>
             <RingProgress
+                roundCaps
                 sections={[{ value: (progress / target) * 100, color: active == -1 ? "yellow" : "teal" }]}
                 label={
                     active == -1 ?
@@ -32,19 +34,6 @@ const Achivement = ({ name, logro, milestones, progress }) => {
 }
 
 const Achivements = () => {
-
-    const defaultAchivements = {
-        "Tenaz": { logro: "Consigue una racha de % días", milestones: [5, 15, 40, 100], progress: 0 },
-        "Erudito": { logro: "Acierta % repasos", milestones: [5, 15, 40, 100, 200], progress: 0 },
-        "Sabelo todo": { logro: "Aprende % tarjetas nuevas", milestones: [10, 25, 75, 150, 300, 500, 750, 1000], progress: 0 },
-        "Infalible": { logro: "Acierta % repasos seguidos", milestones: [5, 15, 40, 100, 200], progress: 0 },
-        "El que persiste": { logro: "Inicia sesion % fines de semana", milestones: [2, 5, 10, 20, 50], progress: 0 },
-        "Fotogenico": { logro: "Añade % foto de perfil", milestones: [1], progress: 0 },
-        "Creador de conocimiento": { logro: "Crea % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
-        "Terminator": { logro: "Termina % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
-        "Estudiante modelo": { logro: "Aprueba % test csin fallos", milestones: [2, 5, 10, 20, 35], progress: 0 },
-        "Empollon": { logro: "Lee las notas de % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
-    }
 
     const [achivements, setAchivements] = useState(defaultAchivements)
 
@@ -72,8 +61,8 @@ const Achivements = () => {
 
             <SimpleGrid cols={2} p="lg">
                 {Object.keys(achivements).map(key =>
-                    <Center>
-                        <Achivement {...achivements[key]} name={key} key={key}></Achivement>
+                    <Center key={key}>
+                        <Achivement {...achivements[key]} name={key} ></Achivement>
                     </Center>
                 )}
             </SimpleGrid >

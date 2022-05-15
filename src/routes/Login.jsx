@@ -43,14 +43,13 @@ const Login = () => {
 						error_contraseña("La contraseña debe contener numeros")
 					} else {
 						const auth = getAuth();
-						// The navigation and notification are handeled in the useEffect
+
 						signInWithEmailAndPassword(auth, email, password)
 							.then((userCredentials) => {
 								notifications.clean();
 								notifications.showNotification({
 									title: "Sesión iniciada",
-									message: `Bienvenido ${userCredentials.user.displayName}`,
-									color: "green"
+									message: `Bienvenido ${userCredentials.user.displayName}`
 								})
 							})
 							.catch((error) => {

@@ -37,7 +37,7 @@ import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
 import { NotificationsProvider } from '@mantine/notifications';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
-import { isToday, isYesterday } from "./utils"
+import { defaultAchivements, isToday, isYesterday } from "./utils"
 
 
 
@@ -73,7 +73,7 @@ const Index = () => {
 
     setLogged(auth.currentUser != null);
 
-    onAuthStateChanged(auth, async (user) => {
+    return onAuthStateChanged(auth, async (user) => {
       setLogged(user != null);
       if (user) {
         const db = getFirestore();
@@ -89,10 +89,16 @@ const Index = () => {
         } else if (isYesterday(last)) {
           // TODO Show notification somewhere    
           const userDoc = await getDoc(userRef)
-          updateDoc(userRef, { racha: (userDoc.data().racha ?? 1) + 1, lastSignInTime: today, learnedToday: 0 })
+          const userData = userDoc.data()
+          const newRacha = (userData.racha ?? 0) + 1
+          const newTenaz = (userData.Tenaz ?? 0) < newRacha ? newRacha : (userData.Tenaz ?? 0)
+          if (defaultAchivements.Tenaz.milestones.find((x) => x == newTenaz)) {
+            console.log("Se ha cumplido el logro")
+          }
+          updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
         } else {
           // TODO Show notification somewhere    
-          updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0 })
+          updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0})
         }
       }
     });

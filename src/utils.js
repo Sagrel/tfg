@@ -41,3 +41,16 @@ export const handleImageUpload = (file) => {
 			.catch(() => reject(new Error('Upload failed')));
 	})
 }
+
+export const defaultAchivements = {
+	"Tenaz": { logro: "Consigue una racha de % días", milestones: [5, 15, 40, 100], progress: 0 },
+	"Erudito": { logro: "Acierta % repasos", milestones: [5, 15, 40, 100, 200], progress: 0 },
+	"Sabelo todo": { logro: "Aprende % tarjetas nuevas", milestones: [10, 25, 75, 150, 300, 500, 750, 1000], progress: 0 },
+	"Infalible": { logro: "Acierta % repasos seguidos", milestones: [5, 15, 40, 100, 200], progress: 0 },
+	"El que persiste": { logro: "Inicia sesion % fines de semana", milestones: [2, 5, 10, 20, 50], progress: 0 },
+	"Fotogenico": { logro: "Añade % foto de perfil", milestones: [1], progress: 0 },
+	"Creador de conocimiento": { logro: "Crea % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+	"Terminator": { logro: "Termina % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+	"Estudiante modelo": { logro: "Aprueba % test csin fallos", milestones: [2, 5, 10, 20, 35], progress: 0 },
+	"Empollon": { logro: "Lee las notas de % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+}
