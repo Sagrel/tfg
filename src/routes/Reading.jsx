@@ -108,7 +108,7 @@ const Reading = () => {
 															const icon = ({ indeterminate, className }) =>
 																answers[idx][idx2].correct ? <Check className={className} /> : <X className={className} />;
 
-															const conditional = isWrong ? { color: "red", icon: icon } : {}
+															const conditional = isWrong ? { color: answers[idx][idx2].correct ? "yellow" : "red", icon: icon } : { color: showResults ? "green" : "blue" }
 
 															return (
 
