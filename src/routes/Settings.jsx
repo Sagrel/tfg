@@ -24,8 +24,8 @@ const Settings = () => {
     }, [])
 
     return (
-        <ScrollArea style={{ height: "100vh", width: "80vw" }} p="lg" type="never">
-            <Stack>
+        <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
+            <Stack p="lg">
                 <Text size="xl">Ajustes</Text>
 
                 <Group grow>

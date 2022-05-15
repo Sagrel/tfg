@@ -20,13 +20,11 @@ const User = () => {
     const [userName, setUserName] = useState(user.displayName)
     const [imageUrl, setImageUrl] = useState(user.photoURL)
 
-    console.log(user.photoURL)
-
     const theme = useMantineTheme();
 
 
     return (
-        <ScrollArea style={{ height: "100vh", width: "80vw" }} p="lg" type="never">
+        <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
 
             <Modal zIndex={11} opened={confirmModal} onClose={() => setConfirmModal(false)} centered>
 
@@ -46,9 +44,7 @@ const User = () => {
                     <Button onClick={() => setConfirmModal(false)} color="blue">Cancelar</Button>
                 </Group>
             </Modal>
-            { /* TODO allow the user to load an image 
-                Usar esto https://mantine.dev/others/dropzone/
-            */}
+
             <Modal zIndex={11} opened={editModal} onClose={() => setEditModal(false)} centered>
                 <form onSubmit={async () => {
                     try {
@@ -88,11 +84,10 @@ const User = () => {
                 </form>
             </Modal>
 
-            <Stack>
+            <Stack p="lg">
                 <Group>
-                    <Avatar src={user.photoURL}></Avatar>
-
-                    <Text>{user.displayName}</Text>
+                    <Avatar size="xl" src={user.photoURL}></Avatar>
+                    <h1>{user.displayName}</h1>
                 </Group>
                 <p>
                     Aqui podriamos poner informacion como el número de palabras aprendidas,
