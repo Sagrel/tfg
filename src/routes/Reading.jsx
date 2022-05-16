@@ -96,7 +96,7 @@ const Reading = () => {
 								{
 									questions.map((q, idx) => {
 										return (
-											<Card>
+											<Card key={idx}>
 
 												<Stack justify={"flex-start"}>
 													<Text>{idx + 1}. {q.title}</Text>

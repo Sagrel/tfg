@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 
 import { RichTextEditor } from '@mantine/rte';
-import { ActionIcon, Button, Card, Center, Checkbox, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Card, Center, Checkbox, Grid, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { getAuth } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
 import { CirclePlus, Rotate360 } from "tabler-icons-react";
@@ -166,18 +166,18 @@ const CardEditModal = ({ index, cards, close, setCards, setDeletedCards, setModa
 						!showBack ?
 							<>
 								<Group grow>
-									<TextInput value={data?.titleFront} required onChange={(e) => setData(old => ({ ...old, titleFront: e.target.value }))}></TextInput>
+									<TextInput label="Titulo frente" value={data?.titleFront} required onChange={(e) => setData(old => ({ ...old, titleFront: e.target.value }))}></TextInput>
 									{flipButton}
 								</Group>
-								<TextInput value={data?.dataFront} onChange={(e) => setData(old => ({ ...old, dataFront: e.target.value }))}></TextInput>
+								<TextInput label="Extra frente" value={data?.dataFront} onChange={(e) => setData(old => ({ ...old, dataFront: e.target.value }))}></TextInput>
 							</>
 							:
 							<>
 								<Group grow >
-									<TextInput value={data?.titleBack} required onChange={(e) => setData(old => ({ ...old, titleBack: e.target.value }))}></TextInput>
+									<TextInput label="Titulo detras" value={data?.titleBack} required onChange={(e) => setData(old => ({ ...old, titleBack: e.target.value }))}></TextInput>
 									{flipButton}
 								</Group>
-								<TextInput value={data?.dataBack} onChange={(e) => setData(old => ({ ...old, dataBack: e.target.value }))}></TextInput>
+								<TextInput label="Extra detras" value={data?.dataBack} onChange={(e) => setData(old => ({ ...old, dataBack: e.target.value }))}></TextInput>
 							</>
 					}
 					<EliminarGuardar close={close} original={original} setArray={setCards} setDeleted={setDeletedCards} setModalData={setModalData} text="esta tarjeta" creating={creating} index={index} />
@@ -204,6 +204,7 @@ const NoteEditModal = ({ index, notes, close, setNotes, setDeletedNotes, setModa
 			<form onSubmit={() => SaveOrCreate(creating, setNotes, close, data, index)}>
 				<Stack>
 					<TextInput value={data?.title} label="Titulo" required onChange={(e) => setData(old => ({ ...old, title: e.target.value }))}></TextInput>
+					<Text>Contenido</Text>
 					<RichTextEditor value={data?.content} onChange={(value) => setData(old => ({ ...old, content: value }))} required onImageUpload={handleImageUpload}></RichTextEditor>
 
 					<EliminarGuardar close={close} original={original} setArray={setNotes} setDeleted={setDeletedNotes} setModalData={setModalData} text="esta nota" creating={creating} index={index} />
@@ -232,10 +233,11 @@ const QuestionEditModal = ({ index, questions, close, setQuestions, setDeletedQu
 
 				<Stack>
 					<TextInput value={data?.title} label="Titulo" required onChange={(event) => setData(old => ({ ...old, title: event.target.value }))}></TextInput>
+					<Text>Opciones</Text>
 					{
 						data.options.map((elem, idx) => {
 							return (
-								<Group>
+								<Group key={idx}>
 									<TextInput value={elem.name} onChange={(e) => setData(old => {
 										old.options[idx].name = e.target.value
 										return { ...old }
@@ -271,9 +273,9 @@ const CardPreview = ({ name, setSelected }) => {
 
 const AddPreview = ({ activate }) => {
 	return (
-		<Center onClick={activate} style={{ cursor: "pointer" }}>
+		<ActionIcon onClick={activate} color="teal">
 			<CirclePlus />
-		</Center>
+		</ActionIcon>
 	)
 }
 
@@ -332,32 +334,39 @@ const Create = () => {
 					save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes, questions, deletedQuestions).then(navigate("/"))
 				}}>
 
-					<Stack align="center" justify="center" style={{ width: "94%", height: "100%", paddingLeft: "2%", paddingRight: "2%" }}>
+					<Stack justify="center" style={{ width: "94%", height: "100%", paddingLeft: "2%", paddingRight: "2%" }}>
 						<h3>Titulo</h3>
 						<TextInput value={title} onChange={(e) => setTitle(e.currentTarget.value)} required></TextInput>
 						<h3>Contenido</h3>
 						<RichTextEditor value={content} onChange={setContent} onImageUpload={handleImageUpload} />
-						<h3>Tarjetas</h3>
-						<SimpleGrid cols={4}>
+						<Group>
+							<h3>Tarjetas</h3>
 							<AddPreview activate={() => setSelectedCard(-2)}></AddPreview>
+						</Group>
+
+						<SimpleGrid cols={4}>
 							{
 								cards.map(({ titleFront, id }, idx) =>
 									<CardPreview key={titleFront + id} name={titleFront} setSelected={() => setSelectedCard(idx)} />
 								)
 							}
 						</SimpleGrid>
-						<h3>Notas</h3>
-						<SimpleGrid cols={4}>
+						<Group>
+							<h3>Notas</h3>
 							<AddPreview activate={() => setSelectedNote(-2)}></AddPreview>
+						</Group>
+						<SimpleGrid cols={4}>
 							{
 								notes.map(({ title, id }, idx) =>
 									<CardPreview key={title + id} name={title} setSelected={() => setSelectedNote(idx)} />
 								)
 							}
 						</SimpleGrid>
-						<h3>Preguntas</h3>
-						<SimpleGrid cols={4}>
+						<Group>
+							<h3>Preguntas</h3>
 							<AddPreview activate={() => setSelectedQuestion(-2)}></AddPreview>
+						</Group>
+						<SimpleGrid cols={4}>
 							{
 								questions.map(({ title, id }, idx) =>
 									<CardPreview key={title + id} name={title} setSelected={() => setSelectedQuestion(idx)} />
