@@ -87,15 +87,15 @@ const Index = () => {
         if (isToday(last)) {
           updateDoc(userRef, { lastSignInTime: today })
         } else if (isYesterday(last)) {
-          // TODO Show notification somewhere    
-          const userDoc = await getDoc(userRef)
           const userData = userDoc.data()
           const newRacha = (userData.racha ?? 0) + 1
           const newTenaz = (userData.Tenaz ?? 0) < newRacha ? newRacha : (userData.Tenaz ?? 0)
+          const userDoc = await getDoc(userRef)
+          updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
+          // TODO Show notification somewhere. Call check achivement
           if (defaultAchivements.Tenaz.milestones.find((x) => x == newTenaz)) {
             console.log("Se ha cumplido el logro")
           }
-          updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
         } else {
           // TODO Show notification somewhere    
           updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0})

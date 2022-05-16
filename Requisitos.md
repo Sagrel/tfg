@@ -27,8 +27,8 @@
 5. El usuario recibirá "puntos de comprension" al completar repasos. La cantidad de puntos dependerá de su velocidad al responder. // TODO
 6. Los logros seran:
    - Dias de rachas seguidos: Tenaz       // TODO show notification
-   - Repasos correctos: Erudito           // TODO 
-   - Aprender x palabras: Sabelo todo     // TODO
+   - Repasos correctos: Erudito            
+   - Aprender x palabras: Sabelo todo     
    - No fallar en x repasos: Maestro infalible  // TODO
    - Hacer lecciones en fines de semana: El que persiste // TODO
    - Añadir una foto de perfil: Fotogenico   // TODO

@@ -1,3 +1,7 @@
+import { getAuth } from "firebase/auth";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { Star } from "tabler-icons-react";
+
 export const sameDay = (date1, date2) => {
 	return date1.toDateString() === date2.toDateString()
 }
@@ -53,4 +57,20 @@ export const defaultAchivements = {
 	"Terminator": { logro: "Termina % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
 	"Estudiante modelo": { logro: "Aprueba % test csin fallos", milestones: [2, 5, 10, 20, 35], progress: 0 },
 	"Empollon": { logro: "Lee las notas de % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+}
+
+export const checkAchivement = async (logro, notifications) => {
+	const db = getFirestore()
+	const user = getAuth().currentUser
+	const userRef = doc(db, "users", user.uid)
+	const userData = (await getDoc(userRef)).data()
+	const lvl = defaultAchivements[logro].milestones.findIndex((x) => x == userData[logro])
+	if (lvl != -1) {
+		notifications.showNotification({
+			title: `Logro conseguido: ${logro}`,
+			message: `Has alcanzado el nivel ${lvl + 1}`,
+			color: "yellow",
+			icon: (<Star />)
+		})
+	}
 }

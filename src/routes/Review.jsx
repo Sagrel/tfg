@@ -5,7 +5,7 @@ import { collection, doc, getDoc, getDocs, getFirestore, increment, updateDoc } 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock } from "tabler-icons-react";
-import { cleanObject } from "../utils";
+import { checkAchivement, cleanObject } from "../utils";
 
 
 const Review = () => {
@@ -108,15 +108,27 @@ const Review = () => {
 			updateDoc(cardRef, cleanObject({ "due date": newDueDate.toDateString(), "interval": newInterval, "failed": failed }))
 		}
 
-		const incrementLearned = () => {
+		const incrementLearned = async () => {
 			const db = getFirestore()
 			const user = getAuth().currentUser
-			const cardRef = doc(db, "users", user.uid)
-			updateDoc(cardRef, { learnedToday: increment(1) })
+			const userRef = doc(db, "users", user.uid)
+			const userData = (await getDoc(userRef)).data()
+			updateDoc(userRef, { learnedToday: increment(1), "Sabelo todo": increment(1) })
+
+			checkAchivement("Sabelo todo", notifications)
+		}
+
+
+		const incrementCorrect = () => {
+			const db = getFirestore()
+			const user = getAuth().currentUser
+			const userRef = doc(db, "users", user.uid)
+			updateDoc(userRef, { Erudito: increment(1) })
+
+			checkAchivement("Eridito", notifications)
 		}
 
 		if (correct) {
-			// TODO advance the required achivements
 			// TODO implement a better algorithm
 			const newDueDate = new Date()
 			newDueDate.setDate(newDueDate.getDate() + cards[0].interval)
@@ -129,10 +141,13 @@ const Review = () => {
 					bonus.hard
 
 
+
 			const newInterval = Math.round(cards[0].interval * (2 + multiplier));
 			updateCard(newDueDate, newInterval, false)
 			if (learning) {
 				incrementLearned()
+			} else {
+				incrementCorrect()
 			}
 			// remove the card from review list
 			const [_, ...tail] = cards;
