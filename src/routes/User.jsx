@@ -2,10 +2,10 @@ import { Avatar, Button, Group, ScrollArea, Text, Stack, Modal, TextInput, useMa
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useNotifications } from "@mantine/notifications";
 import { deleteUser, getAuth, updateProfile } from "firebase/auth";
-import { deleteDoc, doc, getFirestore } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import { Edit, Logout, Photo, Trash, Upload, X } from "tabler-icons-react";
-import { handleImageUpload } from "../utils";
+import { checkAchivement, handleImageUpload } from "../utils";
 
 // TODO Add graphs with info on reviews, cards learned, had cards, ...
 // TODO Show titles
@@ -46,14 +46,20 @@ const User = () => {
             </Modal>
 
             <Modal zIndex={11} opened={editModal} onClose={() => setEditModal(false)} centered>
-                <form onSubmit={async () => {
+                <form onSubmit={async (e) => {
+                    e.preventDefault()
                     try {
-
+                        if (imageUrl != user.photoURL) {
+                            const db = getFirestore();
+                            const userRef = doc(db, "users", user.uid);
+                            await updateDoc(userRef, { Fotogenico: increment(1) })
+                            checkAchivement("Fotogenico", notifications)
+                        }
                         await updateProfile(user, { displayName: userName, photoURL: imageUrl })
                         notifications.showNotification({ message: "Cambios guardados correctamente", color: "green" })
                         setEditModal(false)
                     } catch (e) {
-                        console.error(e, "Ha habido un error")
+                        console.error(e)
                         notifications.showNotification({ message: "Hemos encontrado un error, prueba más tarde", color: "red" })
                     }
                 }}>

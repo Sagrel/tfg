@@ -65,7 +65,7 @@ const Index = () => {
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
   }
 
-  const [logged, setLogged] = useState(false);
+  const [_, setLogged] = useState(false);
 
 
   useEffect(() => {
@@ -91,14 +91,14 @@ const Index = () => {
           const newRacha = (userData.racha ?? 0) + 1
           const newTenaz = (userData.Tenaz ?? 0) < newRacha ? newRacha : (userData.Tenaz ?? 0)
           const userDoc = await getDoc(userRef)
-          updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
+          await updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
           // TODO Show notification somewhere. Call check achivement
           if (defaultAchivements.Tenaz.milestones.find((x) => x == newTenaz)) {
             console.log("Se ha cumplido el logro")
           }
         } else {
           // TODO Show notification somewhere    
-          updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0})
+          await updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0 })
         }
       }
     });
