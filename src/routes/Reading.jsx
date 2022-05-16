@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
 import { RichTextEditor } from '@mantine/rte';
 import { getAuth } from "firebase/auth";
-import { ActionIcon, Button, Card, Center, Checkbox, Divider, Group, Paper, ScrollArea, Space, Stack, Text } from "@mantine/core";
+import { ActionIcon, Anchor, Button, Card, Center, Checkbox, Divider, Group, Paper, ScrollArea, Space, Stack, Text } from "@mantine/core";
 import { Check, PlayerPlay, PlayerTrackNext, PlayerTrackPrev, X } from "tabler-icons-react";
 
 
@@ -51,7 +51,7 @@ const Reading = () => {
 					</Center>
 
 					<RichTextEditor value={mazo?.content} readOnly />
-					<Center>
+					<Center m="lg">
 						<Stack align="center">
 
 							<Group>
@@ -83,12 +83,12 @@ const Reading = () => {
 							</Center>
 						</Stack>
 					</Center>
-					<Divider></Divider>
+
 
 
 					{
 						!showTest ?
-							<Center>
+							<Center m="md">
 								<Button onClick={() => setShowTest(true)}>Realizar prueba</Button>
 							</Center>
 							:
@@ -105,7 +105,7 @@ const Reading = () => {
 
 															const isWrong = showResults && answers[idx][idx2].checked != answers[idx][idx2].correct
 
-															const icon = ({ indeterminate, className }) =>
+															const icon = ({ _, className }) =>
 																answers[idx][idx2].correct ? <Check className={className} /> : <X className={className} />;
 
 															const conditional = isWrong ? { color: answers[idx][idx2].correct ? "yellow" : "red", icon: icon } : { color: showResults ? "green" : "blue" }
@@ -138,11 +138,11 @@ const Reading = () => {
 									{
 										// TODO incrementar logros si haciertas todas la preguntas
 										!showResults ?
-											<Button onClick={() => {
+											<Button m="md" onClick={() => {
 												setShowResults(true)
 											}}>Revisar</Button>
 											:
-											<Text>Has hacertado {aciertos} de {answers.length}. Volver a  <Link to={"/"}>incicio</Link> </Text>
+											<Text m="md" >Has hacertado {aciertos} de {answers.length}. Volver al <Anchor component={Link} to="/">inicio</Anchor> </Text>
 									}
 								</Center>
 							</>
