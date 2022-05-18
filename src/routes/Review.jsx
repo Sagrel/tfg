@@ -184,8 +184,6 @@ const Review = () => {
 	}, [isActive, seconds]);
 
 
-
-
 	let color = "red"
 	if (time_passed_percentage > 66) {
 		color = "green"

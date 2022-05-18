@@ -52,7 +52,7 @@ const Achivements = () => {
         defaultAchivements.Terminator.progress = user_data.Terminator ?? 0
         defaultAchivements["Estudiante modelo"].progress = user_data["Estudiante modelo"] ?? 0
         defaultAchivements.Empollon.progress = user_data.Empollon ?? 0
-        setAchivements({ ...defaultAchivements })
+        setAchivements({ ...defaultAchivements})
     }, [])
 
 

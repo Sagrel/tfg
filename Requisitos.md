@@ -20,18 +20,18 @@
 
 
 # Requisitos del sistema de logros 
-1. El usuario podrá consultar sus logros en la pestaña de logros. // TODO
-2. El sistema de logros lanzará notificaciones cuando se alcance una meta. // TODO
+1. El usuario podrá consultar sus logros en la pestaña de logros. 
+2. El sistema de logros lanzará notificaciones cuando se alcance una meta. 
 3. El usuario podrá desbloquear "titulos" al obtener logros. // TODO
 4. El usuario podrá equiparse un "titulo", el cual se mostrará junto a su nombre. // TODO
-5. El usuario recibirá "puntos de comprension" al completar repasos. La cantidad de puntos dependerá de su velocidad al responder. // TODO
+5. El usuario recibirá "puntos de comprension" al completar repasos. La cantidad de puntos dependerá de su velocidad al responder. // TODO quitar
 6. Los logros seran:
-   - Dias de rachas seguidos: Tenaz       // TODO show notification
+   - Dias de rachas seguidos: Tenaz      
    - Repasos correctos: Erudito            
    - Aprender x palabras: Sabelo todo     
    - No fallar en x repasos: Maestro infalible  // TODO
-   - Hacer lecciones en fines de semana: El que persiste // TODO
-   - Añadir una foto de perfil: Fotogenico   // TODO
+   - Hacer lecciones en fines de semana: El que persiste 
+   - Añadir una foto de perfil: Fotogenico  
    - Crear una leccion: Creador de conocimiento // TODO
    - Terminar una leccion: Terminator  // TODO
    - Responder un test bien: Estudiante modelo  // TODO
@@ -43,8 +43,9 @@
 3. El profesor tendra acceso a la información del progreso de sus alumnos: // TODO
    1. El numero de repasos diaros.
    2. Las palabras más dificiles (con mayor porcentaje de fallo).
-   3. La cantidad de "puntos de comprension" del usuario y sus "titulos".
-   4. Etc...
+   3. Los "titulos" de un usuario.
+   4. Cuantas veces tiene "facil", "ok", y "dificil"
+   5. Etc...
 
 # Requisitos no funcionles
 1. La contraseña del usuario debe contener al menos una letra mayucula, una minuscula, un numnero y tener más de seis caracteres.

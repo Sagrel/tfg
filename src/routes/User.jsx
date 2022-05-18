@@ -66,7 +66,6 @@ const User = () => {
                     }
                 }}>
                     <TextInput label="Nombre de usuario" required value={userName} onChange={(e) => setUserName(e.target.value)} ></TextInput>
-                    {/* TODO poner un spiner de cargando */}
                     <Dropzone
                         onDrop={
                             async (files) => {

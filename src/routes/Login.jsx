@@ -2,6 +2,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { TextInput, Button, Group, Box } from '@mantine/core';
 import { useNotifications } from "@mantine/notifications";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Login = () => {
 	const notifications = useNotifications();
@@ -9,9 +10,11 @@ const Login = () => {
 
 	const { state } = useLocation();
 
+	// FIXME HACK can this be moved somewhere else, maybe in index?
 	if (getAuth().currentUser) {
-		navigate(state?.from ?? "/")
+		navigate(state?.from ?? "/", { replace: true })
 	}
+
 	return (
 		<Box sx={(theme) => ({
 			width: "100vw",
@@ -45,13 +48,6 @@ const Login = () => {
 						const auth = getAuth();
 
 						signInWithEmailAndPassword(auth, email, password)
-							.then((userCredentials) => {
-								notifications.clean();
-								notifications.showNotification({
-									title: "Sesión iniciada",
-									message: `Bienvenido ${userCredentials.user.displayName}`
-								})
-							})
 							.catch((error) => {
 								console.error(error)
 								notifications.showNotification({
