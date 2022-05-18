@@ -74,3 +74,15 @@ export const checkAchivement = async (logro, notifications) => {
 		})
 	}
 }
+
+export const Show = ({ condition, children }) => {
+	return (
+		<>
+			{
+
+				condition &&
+				children
+			}
+		</>
+	)
+}

@@ -7,7 +7,7 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, upda
 import { CirclePlus, Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
-import { cleanObject } from "../utils";
+import { cleanObject, Show } from "../utils";
 import { handleImageUpload } from "../utils";
 
 
@@ -400,21 +400,16 @@ const Create = () => {
 					</Stack>
 				</form>
 
-				{
-					// Modal de editar/crear tarjeta
-					(selectedCard != -1) &&
+				<Show condition={selectedCard != -1}>
 					<CardEditModal index={selectedCard} cards={cards} setCards={setCards} close={() => setSelectedCard(-1)} setDeletedCards={setDeletedCards} setModalData={setDeleteModal}></CardEditModal>
-				}
-				{
-					// Modal de editar/crear nota
-					(selectedNote != -1) &&
+				</Show>
+				<Show condition={selectedNote != -1}>
 					<NoteEditModal index={selectedNote} notes={notes} setNotes={setNotes} close={() => setSelectedNote(-1)} setDeletedNotes={setDeletedNotes} setModalData={setDeleteModal}></NoteEditModal >
-				}
-				{
-					// Modal de editar/crear pregunta
-					(selectedQuestion != -1) &&
+				</Show>
+				<Show condition={selectedQuestion != -1}>
 					<QuestionEditModal index={selectedQuestion} questions={questions} setQuestions={setQuestions} close={() => setSelectedQuestion(-1)} setDeletedQuestions={setDeletedQuestions} setModalData={setDeleteModal} />
-				}
+				</Show>
+
 				<Modal zIndex={11} opened={deleteModal != null} onClose={() => setDeleteModal(null)} centered>
 
 					<Text size="xl" align="center">¿Estas seguro de que quieres eliminar {deleteModal?.text}?</Text>
