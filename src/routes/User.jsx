@@ -20,6 +20,8 @@ const User = () => {
     const [userName, setUserName] = useState(user.displayName)
     const [imageUrl, setImageUrl] = useState(user.photoURL)
 
+    const [loading, setLoading] = useState(false)
+
     const theme = useMantineTheme();
 
 
@@ -64,8 +66,15 @@ const User = () => {
                     }
                 }}>
                     <TextInput label="Nombre de usuario" required value={userName} onChange={(e) => setUserName(e.target.value)} ></TextInput>
+                    {/* TODO poner un spiner de cargando */}
                     <Dropzone
-                        onDrop={async (files) => setImageUrl(await handleImageUpload(files[0]))}
+                        onDrop={
+                            async (files) => {
+                                setLoading(true)
+                                setImageUrl(await handleImageUpload(files[0]))
+                            }
+                        }
+                        loading={loading}
                         onReject={(_) => notifications.showNotification({ message: "Ese archivo no es valido", color: "red" })
                         }
                         maxSize={3 * 1024 ** 2}
@@ -77,7 +86,7 @@ const User = () => {
                         {(status) => dropzoneChildren(status, theme)}
                     </Dropzone>
                     <Text>Preview:</Text>
-                    <img style={{ maxWidth: "100%" }} src={imageUrl} />
+                    <img style={{ maxWidth: "100%" }} src={imageUrl} onLoad={() => setLoading(false)} />
                     <Group grow>
                         <Button color={"red"}
                             onClick={() => setEditModal(false)}>
