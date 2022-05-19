@@ -1,10 +1,12 @@
 import { Link, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { RichTextEditor } from '@mantine/rte';
 import { getAuth } from "firebase/auth";
 import { ActionIcon, Anchor, Button, Card, Center, Checkbox, Divider, Group, Paper, ScrollArea, Space, Stack, Text } from "@mantine/core";
 import { Check, PlayerPlay, PlayerTrackNext, PlayerTrackPrev, X } from "tabler-icons-react";
+import { checkAchivement } from "../utils";
+import { useNotifications } from "@mantine/notifications";
 
 
 const Reading = () => {
@@ -18,6 +20,8 @@ const Reading = () => {
 	const [showTest, setShowTest] = useState(false)
 	const [answers, setAnswers] = useState([])
 	const [showResults, setShowResults] = useState(false)
+
+	const notifications = useNotifications()
 
 	useEffect(async () => {
 		const user = getAuth().currentUser;
@@ -138,17 +142,23 @@ const Reading = () => {
 									{
 										// TODO incrementar logros si haciertas todas la preguntas
 										!showResults ?
-											<Button m="md" onClick={() => {
+											<Button m="md" onClick={async () => {
 												setShowResults(true)
+												if (aciertos === answers.length) {
+													const db = getFirestore()
+													const user = getAuth().currentUser
+													const userRef = doc(db, "users", user.uid)
+													await updateDoc(userRef, { "Estudiante modelo": increment(1) })
+
+													checkAchivement("Estudiante modelo", notifications)
+												}
 											}}>Revisar</Button>
 											:
 											<Text m="md" >Has hacertado {aciertos} de {answers.length}. Volver al <Anchor component={Link} to="/">inicio</Anchor> </Text>
 									}
 								</Center>
 							</>
-
 					}
-
 				</ScrollArea>
 			</Center >
 		</Paper >

@@ -55,7 +55,7 @@ export const defaultAchivements = {
 	"Fotogenico": { logro: "Añade % foto de perfil", milestones: [1], progress: 0 },
 	"Creador de conocimiento": { logro: "Crea % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
 	"Terminator": { logro: "Termina % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
-	"Estudiante modelo": { logro: "Aprueba % test csin fallos", milestones: [2, 5, 10, 20, 35], progress: 0 },
+	"Estudiante modelo": { logro: "Aprueba % test sin fallos", milestones: [2, 5, 10, 20, 35], progress: 0 },
 	"Empollon": { logro: "Lee las notas durante % minutos", milestones: [2, 5, 10, 20, 35], progress: 0 },
 }
 
