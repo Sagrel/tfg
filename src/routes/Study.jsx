@@ -88,17 +88,16 @@ const Study = () => {
     const [canLearn, setCanLearn] = useState(0)
 
     useEffect(async () => {
-        const user = getAuth().currentUser;
-        if (!user) return;
         const db = getFirestore();
+        const user = getAuth().currentUser
         const userRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userRef)
         const userData = userDoc.data()
-        setRacha(userData.racha ?? 0) // FIXME this happens before the change is actually done in the database
+        setRacha(userData.racha ?? 0) // FIXME this happens before the change is actually done in the database 
         setCanLearn(userData.learnLimit - userData.learnedToday)
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
-        // TODO should I sort this in some way?
+
         setMazos(await Promise.all(mazos.docs.map(async (mazo) => {
             // Tarjetas dentro del mazo en cuestion
             const tarjetasRef = collection(db, "users", user.uid, "mazos", mazo.id, "tarjetas");
@@ -124,7 +123,7 @@ const Study = () => {
         <ScrollArea style={{ height: "100%", width: "80vw" }} type="never">
             <Stack p="lg">
                 <Group position="center" grow>
-                    <Button onClick={() => { navigate("review") }}>
+                    <Button disabled={pending === 0} onClick={() => { navigate("review") }}>
                         Repasar pendientes {pending}
                     </Button>
                     <Center>
