@@ -83,10 +83,13 @@ const Content = () => {
         } else if (isYesterday(last)) {
           const userData = userDoc.data()
           const newRacha = (userData.racha ?? 0) + 1
-          const newTenaz = (userData.Tenaz ?? 0) < newRacha ? newRacha : (userData.Tenaz ?? 0)
+          const batidoRecord = (userData.Tenaz ?? 0) < newRacha
+          const newTenaz = batidoRecord ? newRacha : (userData.Tenaz ?? 0)
           await updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
 
-          checkAchivement("Tenaz", notifications)
+          if (batidoRecord) {
+            checkAchivement("Tenaz", notifications)
+          }
 
           if (today.includes("Sun") || today.includes("Sat")) {
             await updateDoc(userRef, { "El que persiste": increment() })

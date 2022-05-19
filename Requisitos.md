@@ -22,17 +22,17 @@
 # Requisitos del sistema de logros 
 1. El usuario podrá consultar sus logros en la pestaña de logros. 
 2. El sistema de logros lanzará notificaciones cuando se alcance una meta. 
-3. El usuario podrá desbloquear "titulos" al obtener logros. // TODO
+3. El usuario podrá desbloquear "titulos" al obtener logros. 
 4. El usuario podrá equiparse un "titulo", el cual se mostrará junto a su nombre. // TODO
 5. El usuario recibirá "puntos de comprension" al completar repasos. La cantidad de puntos dependerá de su velocidad al responder. // TODO quitar
 6. Los logros seran:
    - Dias de rachas seguidos: Tenaz      
    - Repasos correctos: Erudito            
    - Aprender x palabras: Sabelo todo     
-   - No fallar en x repasos: Maestro infalible  // TODO
+   - No fallar en x repasos: Maestro infalible  
    - Hacer lecciones en fines de semana: El que persiste 
    - Añadir una foto de perfil: Fotogenico  
-   - Crear una leccion: Creador de conocimiento // TODO
+   - Crear una leccion: Creador de conocimiento 
    - Terminar una leccion: Terminator  // TODO
    - Responder un test bien: Estudiante modelo  // TODO
    - Leer notas: Empollón  

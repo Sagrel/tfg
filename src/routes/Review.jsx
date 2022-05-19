@@ -121,16 +121,29 @@ const Review = () => {
 			const db = getFirestore()
 			const user = getAuth().currentUser
 			const userRef = doc(db, "users", user.uid)
-			await updateDoc(userRef, { Erudito: increment(1) })
+			const userDoc = await getDoc(userRef)
+			const userData = userDoc.data()
+
+			const newRacha = (userData.rachaCorrectas ?? 0) + 1
+			const batidoRecord = (userData.Infalible ?? 0) < newRacha
+			const newInfalible = batidoRecord ? newRacha : (userData.Infalible ?? 0)
+
+			await updateDoc(userRef, { Erudito: increment(1), rachaCorrectas: newRacha, Infalible: newInfalible })
 
 			checkAchivement("Erudito", notifications)
+			if (batidoRecord) {
+				checkAchivement("Infalible", notifications)
+			}
+		}
+
+		const romperRachaCorrectas = async () => {
+			const db = getFirestore()
+			const user = getAuth().currentUser
+			const userRef = doc(db, "users", user.uid)
+			await updateDoc(userRef, { rachaCorrectas: 0 })
 		}
 
 		if (correct) {
-			// TODO implement a better algorithm
-			const newDueDate = new Date()
-			newDueDate.setDate(newDueDate.getDate() + cards[0].interval)
-
 			const multiplier = time_passed_percentage > 66 ?
 				bonus.easy
 				: time_passed_percentage > 33 ?
@@ -138,9 +151,13 @@ const Review = () => {
 					:
 					bonus.hard
 
+			const newInterval = Math.round(multiplier * cards[0].interval)
+			const newDueDate = new Date()
+
+			newDueDate.setDate(newDueDate.getDate() + newInterval)
 
 
-			const newInterval = Math.round(cards[0].interval * (2 + multiplier));
+
 			updateCard(newDueDate, newInterval, false)
 			if (learning) {
 				incrementLearned()
@@ -152,7 +169,7 @@ const Review = () => {
 
 			advanceOrEnd(tail)
 		} else {
-			// TODO break correct answer streak
+			romperRachaCorrectas()
 			const newDueDate = new Date();
 			const newInterval = 1;
 			updateCard(newDueDate, newInterval, true)
