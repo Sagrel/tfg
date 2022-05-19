@@ -84,7 +84,6 @@ const Review = () => {
 	const time_passed_percentage = (seconds / timeLimit) * 100
 
 	const advanceOrEnd = (newCards) => {
-		// TODO Advance the achievements
 		// TODO Do it also if we just dont have any reviews to begin with
 		if (newCards.length == 0) {
 			notifications.clean()
@@ -112,20 +111,19 @@ const Review = () => {
 			const db = getFirestore()
 			const user = getAuth().currentUser
 			const userRef = doc(db, "users", user.uid)
-			const userData = (await getDoc(userRef)).data()
-			updateDoc(userRef, { learnedToday: increment(1), "Sabelo todo": increment(1) })
+			await updateDoc(userRef, { learnedToday: increment(1), "Sabelo todo": increment(1) })
 
 			checkAchivement("Sabelo todo", notifications)
 		}
 
 
-		const incrementCorrect = () => {
+		const incrementCorrect = async () => {
 			const db = getFirestore()
 			const user = getAuth().currentUser
 			const userRef = doc(db, "users", user.uid)
-			updateDoc(userRef, { Erudito: increment(1) })
+			await updateDoc(userRef, { Erudito: increment(1) })
 
-			checkAchivement("Eridito", notifications)
+			checkAchivement("Erudito", notifications)
 		}
 
 		if (correct) {

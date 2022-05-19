@@ -3,11 +3,11 @@ import { useState, useEffect } from "react"
 import { RichTextEditor } from '@mantine/rte';
 import { ActionIcon, Button, Card, Center, Checkbox, Grid, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { getAuth } from "firebase/auth";
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { CirclePlus, Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
-import { cleanObject, Show } from "../utils";
+import { checkAchivement, cleanObject, Show } from "../utils";
 import { handleImageUpload } from "../utils";
 
 
@@ -159,7 +159,11 @@ const CardEditModal = ({ index, cards, close, setCards, setDeletedCards, setModa
 			onClose={close}
 			title={"Editando el " + (showBack ? "reverso" : "frente")}
 		>
-			<form onSubmit={() => SaveOrCreate(creating, setCards, close, data, index)}>
+			<form onSubmit={(e) => {
+				e.preventDefault()
+				SaveOrCreate(creating, setCards, close, data, index)
+			}
+			}>
 				<Stack>
 
 					{
@@ -201,7 +205,10 @@ const NoteEditModal = ({ index, notes, close, setNotes, setDeletedNotes, setModa
 			onClose={close}
 			title={"Editando nota"}
 		>
-			<form onSubmit={() => SaveOrCreate(creating, setNotes, close, data, index)}>
+			<form onSubmit={(e) => {
+				e.preventDefault()
+				SaveOrCreate(creating, setNotes, close, data, index)
+			}}>
 				<Stack>
 					<TextInput value={data?.title} label="Titulo" required onChange={(e) => setData(old => ({ ...old, title: e.target.value }))}></TextInput>
 					<Text>Contenido</Text>
@@ -229,7 +236,11 @@ const QuestionEditModal = ({ index, questions, close, setQuestions, setDeletedQu
 			onClose={close}
 			title={"Editando pregunta"}
 		>
-			<form onSubmit={() => SaveOrCreate(creating, setQuestions, close, data, index)}>
+			<form onSubmit={(e) => {
+				e.preventDefault()
+				SaveOrCreate(creating, setQuestions, close, data, index)
+			}
+			}>
 
 				<Stack>
 					<TextInput value={data?.title} label="Titulo" required onChange={(event) => setData(old => ({ ...old, title: event.target.value }))}></TextInput>
@@ -330,8 +341,17 @@ const Create = () => {
 	return (
 		<Paper style={{ width: "100vw", height: "100vh" }} radius={0}>
 			<ScrollArea style={{ height: "100vh", width: "100vw" }} type="never">
-				<form onSubmit={() => {
-					save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes, questions, deletedQuestions).then(navigate("/"))
+				<form onSubmit={async (e) => {
+					e.preventDefault()
+
+					await save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes, questions, deletedQuestions)
+					const db = getFirestore()
+					const user = getAuth().currentUser
+					const userRef = doc(db, "users", user.uid)
+					await updateDoc(userRef, { "Creador de conocimiento": increment(1) })
+
+					checkAchivement("Creador de conocimiento", notifications)
+					navigate("/")
 				}}>
 
 					<Stack justify="center" style={{ width: "94%", height: "100%", paddingLeft: "2%", paddingRight: "2%" }}>
