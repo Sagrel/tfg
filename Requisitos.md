@@ -33,7 +33,7 @@
    - Hacer lecciones en fines de semana: El que persiste 
    - Añadir una foto de perfil: Fotogenico  
    - Crear una leccion: Creador de conocimiento 
-   - Terminar una leccion: Terminator  // TODO
+   - Terminar una leccion: Terminator  
    - Responder un test bien: Estudiante modelo  // TODO
    - Leer notas: Empollón  
 

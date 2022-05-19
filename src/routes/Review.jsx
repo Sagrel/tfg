@@ -83,9 +83,23 @@ const Review = () => {
 
 	const time_passed_percentage = (seconds / timeLimit) * 100
 
-	const advanceOrEnd = (newCards) => {
-		// TODO Do it also if we just dont have any reviews to begin with
+	const advanceOrEnd = async (newCards) => {
 		if (newCards.length == 0) {
+			if (learning) {
+				const db = getFirestore();
+				const user = getAuth().currentUser.uid
+				const tarjetasRef = collection(db, "users", user, "mazos", mazo, "tarjetas")
+				const tarjetas = await getDocs(tarjetasRef)
+				const tarjetasEnAprendizaje = tarjetas.docs.filter(t => t.data()["due date"] == undefined).length
+
+				if (tarjetasEnAprendizaje === 0) {
+					const userRef = doc(db, "users", user)
+					await updateDoc(userRef, { Terminator: increment(1) })
+
+					checkAchivement("Terminator", notifications)
+				}
+			}
+
 			notifications.clean()
 			notifications.showNotification({
 				title: "Repaso terminado",
