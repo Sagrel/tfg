@@ -35,7 +35,7 @@
    - Crear una leccion: Creador de conocimiento // TODO
    - Terminar una leccion: Terminator  // TODO
    - Responder un test bien: Estudiante modelo  // TODO
-   - Leer notas: Empollón  // TODO
+   - Leer notas: Empollón  
 
 # Requisitos de monitorización del progreso
 1. Si el usuario tiene el rol de profesor podrá generar un enlace que permitirá a sus alumnos asociarle como profesor. // TODO

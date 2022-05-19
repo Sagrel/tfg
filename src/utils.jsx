@@ -56,7 +56,7 @@ export const defaultAchivements = {
 	"Creador de conocimiento": { logro: "Crea % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
 	"Terminator": { logro: "Termina % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
 	"Estudiante modelo": { logro: "Aprueba % test csin fallos", milestones: [2, 5, 10, 20, 35], progress: 0 },
-	"Empollon": { logro: "Lee las notas de % lecciones", milestones: [2, 5, 10, 20, 35], progress: 0 },
+	"Empollon": { logro: "Lee las notas durante % minutos", milestones: [2, 5, 10, 20, 35], progress: 0 },
 }
 
 export const checkAchivement = async (logro, notifications) => {

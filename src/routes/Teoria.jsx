@@ -1,22 +1,39 @@
 import { useParams } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { collection, getDocs, getFirestore } from "firebase/firestore"
+import { collection, doc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore"
 import { Accordion, Center, Paper, ScrollArea } from "@mantine/core"
 import { RichTextEditor } from '@mantine/rte';
 import { getAuth } from "firebase/auth";
+import { checkAchivement } from "../utils";
+import { useNotifications } from "@mantine/notifications";
 
 const Teoria = () => {
 	const { tema } = useParams()
 
 	const [notas, setNotas] = useState([])
 
-	useEffect(async () => {
+
+	const notification = useNotifications()
+
+	let interval;
+	useEffect(() => {
 		const user = getAuth().currentUser;
-		if (!user) return;
 		const db = getFirestore();
 		const notasRef = collection(db, "users", user.uid, "mazos", tema, "notas");
-		const notas = await getDocs(notasRef);
-		setNotas(notas.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+		getDocs(notasRef)
+			.then(notas => setNotas(notas.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+
+
+
+		interval = setInterval(async () => {
+			console.log("hola")
+			const userRef = doc(db, "users", user.uid)
+			await updateDoc(userRef, { Empollon: increment(1) })
+			checkAchivement("Empollon", notification)
+		}, 10000)
+
+		return () => clearInterval(interval)
+
 	}, [])
 
 	return (
