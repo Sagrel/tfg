@@ -1,5 +1,5 @@
 import { render } from "react-dom";
-import { useEffect, useState } from "react";
+import { useEffect, createContext, useState } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -37,8 +37,7 @@ import { useColorScheme, useLocalStorageValue } from "@mantine/hooks";
 import { NotificationsProvider, useNotifications } from '@mantine/notifications';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, getFirestore, increment, updateDoc } from "firebase/firestore";
-import { checkAchivement, isToday, isYesterday } from "./utils"
-
+import { checkAchivement, isToday, isYesterday, UserContext } from "./utils"
 
 
 
@@ -56,20 +55,26 @@ const Content = () => {
 
   const notifications = useNotifications();
 
+  const [isProfesor, setIsProfesor] = useState(false)
+
   useEffect(() => {
     const auth = getAuth();
 
     return onAuthStateChanged(auth, async (user) => {
       if (!user) return;
 
-      notifications.clean();
-      notifications.showNotification({
-        title: "Sesión iniciada",
-        message: `Bienvenido ${user.displayName}`
-      })
       const db = getFirestore();
       const userRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userRef);
+      const userData = userDoc.data()
+
+      notifications.clean();
+      notifications.showNotification({
+        title: "Sesión iniciada",
+        message: `Bienvenido ${userData.name}`
+      })
+
+      setIsProfesor(userData.profesor)
 
       const last = new Date(userDoc.data().lastSignInTime) ?? new Date(user.metadata.lastSignInTime) ?? new Date()
 
@@ -78,7 +83,6 @@ const Content = () => {
       if (isToday(last)) {
         updateDoc(userRef, { lastSignInTime: today })
       } else if (isYesterday(last)) {
-        const userData = userDoc.data()
         const newRacha = (userData.racha ?? 0) + 1
         const batidoRecord = (userData.Tenaz ?? 0) < newRacha
         const newTenaz = batidoRecord ? newRacha : (userData.Tenaz ?? 0)
@@ -101,22 +105,24 @@ const Content = () => {
   }, [])
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-        <Route path="/" element={<Aunthenticated ><App /></Aunthenticated>} />
-        <Route path="teoria/:tema" element={<Aunthenticated><Teoria /></Aunthenticated>} />
-        <Route path="reading/:tema" element={<Aunthenticated><Reading /></Aunthenticated>} />
-        { /* The no params version reviews every thing, the one with a paremeter only adds new words to the learning list */}
-        <Route path="review/" element={<Aunthenticated><Review /></Aunthenticated>} />
-        <Route path="review/:mazo" element={<Aunthenticated><Review /></Aunthenticated>} />
-        { /* The no params version creates a new lesson, the one with a paremeter only edits it*/}
-        <Route path="create/:mazo" element={<Aunthenticated><Create /></Aunthenticated>} />
-        <Route path="create" element={<Aunthenticated><Create /></Aunthenticated>} />
-        <Route path="*" element={<Error />} />
-      </Routes>
-    </BrowserRouter>
+    <UserContext.Provider value={isProfesor}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="/" element={<Aunthenticated ><App /></Aunthenticated>} />
+          <Route path="teoria/:tema" element={<Aunthenticated><Teoria /></Aunthenticated>} />
+          <Route path="reading/:tema" element={<Aunthenticated><Reading /></Aunthenticated>} />
+          { /* The no params version reviews every thing, the one with a paremeter only adds new words to the learning list */}
+          <Route path="review/" element={<Aunthenticated><Review /></Aunthenticated>} />
+          <Route path="review/:mazo" element={<Aunthenticated><Review /></Aunthenticated>} />
+          { /* The no params version creates a new lesson, the one with a paremeter only edits it*/}
+          <Route path="create/:mazo" element={<Aunthenticated><Create /></Aunthenticated>} />
+          <Route path="create" element={<Aunthenticated><Create /></Aunthenticated>} />
+          <Route path="*" element={<Error />} />
+        </Routes>
+      </BrowserRouter>
+    </UserContext.Provider>
   )
 }
 

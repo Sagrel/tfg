@@ -1,27 +1,32 @@
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { Book, Settings, Trophy, User } from 'tabler-icons-react';
-import {  Paper, Tabs } from '@mantine/core';
+
+import { Book, School, Settings, Trophy, User } from 'tabler-icons-react';
+import { Paper, Tabs } from '@mantine/core';
 import Study from './Study';
 import SettingsTab from './Settings';
 import Achivements from './Achivements';
 import UserTab from './User';
+import { useContext } from 'react';
+import { Show, UserContext } from '../utils';
+import Students from './Students';
 
 const App = () => {
-    // TODO we are gonna check if the current user is a professor quite a lot. Use a context to pass that info around
+    const isProfesor = useContext(UserContext)
 
     return (
-
         <Paper style={{ width: "100%", height: "100%" }} radius={0}>
-
             <Tabs grow orientation="vertical" position="center" style={{ width: "100%", height: "100vh" }} >
                 <Tabs.Tab style={{ height: "25vh" }} icon={<Book size="10vw" />}><Study /></Tabs.Tab>
 
-                { /* TODO Si el usuario es un profesor esto se cambiaría por una pestaña mostrando la info de sus alumos */}
-                <Tabs.Tab style={{ height: "25vh" }} icon={<Trophy size="10vw" />}><Achivements></Achivements></Tabs.Tab>
-                { /* TODO check if we have a user icon we can use */}
-                <Tabs.Tab style={{ height: "25vh" }} icon={<User size="10vw" />}><UserTab></UserTab></Tabs.Tab>
+                <Tabs.Tab style={{ height: "25vh" }} icon={isProfesor ? <School size="10vw" /> : <Trophy size="10vw" />}>
+                    <Show condition={isProfesor}>
+                        <Students />
+                    </Show>
+                    <Show condition={!isProfesor}>
+                        <Achivements />
+                    </Show>
+                </Tabs.Tab>
+
+                <Tabs.Tab style={{ height: "25vh" }} icon={<User size="10vw" />}><UserTab /></Tabs.Tab>
                 <Tabs.Tab style={{ height: "25vh" }} my="0" icon={<Settings size="10vw" />}><SettingsTab /></Tabs.Tab>
             </Tabs >
         </Paper>

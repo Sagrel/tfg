@@ -3,7 +3,7 @@ import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useNotifications } from "@mantine/notifications";
 import { deleteUser, getAuth, updateProfile } from "firebase/auth";
 import { deleteDoc, doc, getDoc, getFirestore, increment, updateDoc } from "firebase/firestore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Logout, Photo, Trash, Upload, X } from "tabler-icons-react";
 import { checkAchivement, handleImageUpload } from "../utils";
@@ -18,14 +18,28 @@ const User = () => {
     const [confirmModal, setConfirmModal] = useState(false)
     const [editModal, setEditModal] = useState(false)
 
-    const [userName, setUserName] = useState(user.displayName)
-    const [imageUrl, setImageUrl] = useState(user.photoURL)
+    const [originalUserName, setOriginalUserName] = useState(null)
+    const [userName, setUserName] = useState(null)
+    const [originalImageUrl, setOriginalImageUrl] = useState(null)
+    const [imageUrl, setImageUrl] = useState(null)
 
     const [loading, setLoading] = useState(false)
 
     const theme = useMantineTheme();
 
     const navigate = useNavigate();
+
+    useEffect(async () => {
+        const db = getFirestore()
+        const user = getAuth().currentUser
+        const userRef = doc(db, "users", user.uid)
+        const userData = (await getDoc(userRef)).data()
+
+        setUserName(userData.name)
+        setOriginalUserName(userData.name)
+        setImageUrl(userData.photo)
+        setOriginalImageUrl(userData.photo)
+    }, [])
 
 
     return (
@@ -54,15 +68,17 @@ const User = () => {
                 <form onSubmit={async (e) => {
                     e.preventDefault()
                     try {
-                        if (imageUrl != user.photoURL) {
-                            const db = getFirestore();
-                            const userRef = doc(db, "users", user.uid);
+                        const db = getFirestore();
+                        const userRef = doc(db, "users", user.uid);
+                        if (imageUrl != originalImageUrl) {
                             await updateDoc(userRef, { Fotogenico: increment(1) })
                             checkAchivement("Fotogenico", notifications)
                         }
-                        await updateProfile(user, { displayName: userName, photoURL: imageUrl })
+                        await updateDoc(userRef, { name: userName, photo: imageUrl })
                         notifications.showNotification({ message: "Cambios guardados correctamente", color: "green" })
                         setEditModal(false)
+                        setOriginalImageUrl(imageUrl)
+                        setOriginalUserName(userName)
                     } catch (e) {
                         console.error(e)
                         notifications.showNotification({ message: "Hemos encontrado un error, prueba más tarde", color: "red" })
@@ -103,8 +119,8 @@ const User = () => {
 
             <Stack p="lg">
                 <Group>
-                    <Avatar size="xl" src={user.photoURL}></Avatar>
-                    <h1>{user.displayName}</h1>
+                    <Avatar size="xl" src={originalImageUrl}></Avatar>
+                    <h1>{originalUserName}</h1>
                 </Group>
                 <p>
                     Aqui podriamos poner informacion como el número de palabras aprendidas,

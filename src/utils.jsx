@@ -1,5 +1,6 @@
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { createContext } from "react";
 import { Star } from "tabler-icons-react";
 
 export const sameDay = (date1, date2) => {
@@ -86,3 +87,5 @@ export const Show = ({ condition, children }) => {
 		</>
 	)
 }
+
+export const UserContext = createContext();

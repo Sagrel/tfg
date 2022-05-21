@@ -10,7 +10,7 @@ const Register = () => {
 
 	const { state } = useLocation();
 
-
+	// TODO move away from box
 
 	return (
 		<Box sx={(theme) => ({
@@ -25,7 +25,7 @@ const Register = () => {
 					const email = e.target.email.value
 					const password = e.target.password.value
 					const name = e.target.name.value
-					const profesor = e.target.profesor.value
+					const profesor = e.target.profesor.checked
 
 					const error_contraseña = (m) => {
 						notifications.showNotification({
@@ -47,18 +47,12 @@ const Register = () => {
 						const auth = getAuth();
 						try {
 							const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-							await updateProfile(userCredential.user, {
-								displayName: name,
-								photoURL: "https://firebasestorage.googleapis.com/v0/b/tfg-antoniogc.appspot.com/o/unknown-512.webp?alt=media&token=fabc9337-4e79-42c6-9375-9cf2bb0f787b"
-							})
 							const db = getFirestore();
 							const userRef = doc(db, 'users', userCredential.user.uid);
-							await setDoc(userRef, { timer: 10, easyBonus: 2, hardBonus: 1, okBonus: 1.5, learnLimit: 10, profesor: profesor })
-							notifications.clean()
-							notifications.showNotification({
-								title: "Cuenta creada con exito",
-								message: `Bienvenido ${userCredential.user.displayName}`,
-								color: "green"
+							await setDoc(userRef, {
+								timer: 10, easyBonus: 2, hardBonus: 1, okBonus: 1.5, learnLimit: 10, profesor: profesor,
+								name,
+								photo: "https://firebasestorage.googleapis.com/v0/b/tfg-antoniogc.appspot.com/o/unknown-512.webp?alt=media&token=fabc9337-4e79-42c6-9375-9cf2bb0f787b"
 							})
 						} catch (errorMessage) {
 							notifications.clean()
