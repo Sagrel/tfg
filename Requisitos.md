@@ -34,7 +34,7 @@
    - Añadir una foto de perfil: Fotogenico  
    - Crear una leccion: Creador de conocimiento 
    - Terminar una leccion: Terminator  
-   - Responder un test bien: Estudiante modelo  // TODO
+   - Responder un test bien: Estudiante modelo
    - Leer notas: Empollón  
 
 # Requisitos de monitorización del progreso

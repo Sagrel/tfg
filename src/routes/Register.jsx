@@ -55,7 +55,7 @@ const Register = () => {
 							})
 							const db = getFirestore();
 							const userRef = doc(db, 'users', userCredential.user.uid);
-							await setDoc(userRef, { timer: 10 })
+							await setDoc(userRef, { timer: 10, easyBonus: 2, hardBonus: 1, okBonus: 1.5, learnLimit: 10 })
 							notifications.clean()
 							notifications.showNotification({
 								title: "Cuenta creada con exito",

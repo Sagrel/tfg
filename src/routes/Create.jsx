@@ -345,12 +345,17 @@ const Create = () => {
 					e.preventDefault()
 
 					await save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes, questions, deletedQuestions)
-					const db = getFirestore()
-					const user = getAuth().currentUser
-					const userRef = doc(db, "users", user.uid)
-					await updateDoc(userRef, { "Creador de conocimiento": increment(1) })
 
-					checkAchivement("Creador de conocimiento", notifications)
+					// Si estamos creando un mazo nuevo avanzamos el logro
+					if (!idMazo) {
+						const db = getFirestore()
+						const user = getAuth().currentUser
+						const userRef = doc(db, "users", user.uid)
+						await updateDoc(userRef, { "Creador de conocimiento": increment(1) })
+	
+						checkAchivement("Creador de conocimiento", notifications)						
+					}
+
 					navigate("/")
 				}}>
 

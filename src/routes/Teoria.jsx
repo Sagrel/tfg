@@ -1,10 +1,10 @@
-import { useParams } from "react-router-dom"
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { collection, doc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore"
-import { Accordion, Center, Paper, ScrollArea } from "@mantine/core"
+import { Accordion, Button, Center, Group, Paper, ScrollArea, Text } from "@mantine/core"
 import { RichTextEditor } from '@mantine/rte';
 import { getAuth } from "firebase/auth";
-import { checkAchivement } from "../utils";
+import { checkAchivement, Show } from "../utils";
 import { useNotifications } from "@mantine/notifications";
 
 const Teoria = () => {
@@ -14,6 +14,7 @@ const Teoria = () => {
 
 
 	const notification = useNotifications()
+	const navigate = useNavigate()
 
 	let interval;
 	useEffect(() => {
@@ -42,15 +43,24 @@ const Teoria = () => {
 
 				<ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
 					<h1>Notas del mazo</h1>
-					<Accordion>
-						{notas.map((note) => {
-							return (
-								<Accordion.Item label={note.title} key={note.id}>
-									<RichTextEditor value={note.content} readOnly />
-								</Accordion.Item>
-							)
-						})}
-					</Accordion>
+					<Show condition={notas.length > 0}>
+						<Accordion>
+							{notas.map((note) => {
+								return (
+									<Accordion.Item label={note.title} key={note.id}>
+										<RichTextEditor value={note.content} readOnly />
+									</Accordion.Item>
+								)
+							})}
+						</Accordion>
+					</Show>
+					<Show condition={notas.length == 0}>
+						<Group>
+							<Text>Parece que esta leccion no contiene notas</Text>
+							<Button onClick={() => navigate("/create/" + tema)}>Añadir notas</Button>
+						</Group>
+					</Show>
+					<Button m="md" onClick={() => navigate("/")}>Volver</Button>
 				</ScrollArea>
 			</Center>
 		</Paper>
