@@ -10,10 +10,7 @@ const Register = () => {
 
 	const { state } = useLocation();
 
-	// TODO HACK move this some where else
-	if (getAuth().currentUser) {
-		navigate(state?.from ?? "/")
-	}
+
 
 	return (
 		<Box sx={(theme) => ({
@@ -71,6 +68,8 @@ const Register = () => {
 								color: "red"
 							})
 						}
+
+						navigate(state?.from ?? "/")
 					}
 				}}>
 					<TextInput

@@ -4,6 +4,7 @@ import { useNotifications } from "@mantine/notifications";
 import { deleteUser, getAuth, updateProfile } from "firebase/auth";
 import { deleteDoc, doc, getDoc, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Edit, Logout, Photo, Trash, Upload, X } from "tabler-icons-react";
 import { checkAchivement, handleImageUpload } from "../utils";
 
@@ -23,6 +24,8 @@ const User = () => {
     const [loading, setLoading] = useState(false)
 
     const theme = useMantineTheme();
+
+    const navigate = useNavigate();
 
 
     return (
@@ -111,8 +114,9 @@ const User = () => {
                     <Button rightIcon={<Edit />} onClick={() => {
                         setEditModal(true)
                     }}>Editar</Button>
-                    <Button rightIcon={<Logout />} onClick={() => {
-                        getAuth().signOut();
+                    <Button rightIcon={<Logout />} onClick={async () => {
+                        await getAuth().signOut();
+                        navigate("/login")
                     }}>Cerrar sesión</Button>
                     <Button color="red" rightIcon={<Trash />} onClick={() => setConfirmModal(true)}>Eliminar cuenta</Button>
                 </Group>

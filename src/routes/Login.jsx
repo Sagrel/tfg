@@ -10,10 +10,13 @@ const Login = () => {
 
 	const { state } = useLocation();
 
-	// FIXME HACK can this be moved somewhere else, maybe in index?
-	if (getAuth().currentUser) {
-		navigate(state?.from ?? "/", { replace: true })
-	}
+	const user = getAuth().currentUser
+
+	useEffect(() => {
+		if (user) {
+			navigate(state?.from ?? "/", { replace: true })
+		}
+	}, [user])
 
 	return (
 		<Box sx={(theme) => ({
@@ -24,7 +27,7 @@ const Login = () => {
 		})}>
 
 			<Box mx="auto" sx={{ maxWidth: "25%" }}>
-				<form onSubmit={(e) => {
+				<form onSubmit={async (e) => {
 					e.preventDefault();
 					const email = e.target.email.value
 					const password = e.target.password.value
@@ -45,17 +48,17 @@ const Login = () => {
 					} else if (!password.match(/[0-9]+/)) {
 						error_contraseña("La contraseña debe contener numeros")
 					} else {
-						const auth = getAuth();
-
-						signInWithEmailAndPassword(auth, email, password)
-							.catch((error) => {
-								console.error(error)
-								notifications.showNotification({
-									title: "Error inicio de sesión",
-									message: "Los datos son incorrectos",
-									color: "red"
-								})
-							});
+						try {
+							await signInWithEmailAndPassword(getAuth(), email, password)
+						}
+						catch (error) {
+							console.error(error)
+							notifications.showNotification({
+								title: "Error inicio de sesión",
+								message: "Los datos son incorrectos",
+								color: "red"
+							})
+						}
 					}
 
 				}}>
@@ -81,7 +84,7 @@ const Login = () => {
 					</Group>
 				</form>
 			</Box>
-		</Box>
+		</Box >
 	)
 }
 

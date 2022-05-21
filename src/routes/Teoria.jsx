@@ -24,10 +24,7 @@ const Teoria = () => {
 		getDocs(notasRef)
 			.then(notas => setNotas(notas.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
 
-
-
 		interval = setInterval(async () => {
-			console.log("hola")
 			const userRef = doc(db, "users", user.uid)
 			await updateDoc(userRef, { Empollon: increment(1) })
 			checkAchivement("Empollon", notification)

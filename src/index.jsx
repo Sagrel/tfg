@@ -54,52 +54,49 @@ const Aunthenticated = ({ children }) => {
 
 const Content = () => {
 
-  const [_, setLogged] = useState(false);
   const notifications = useNotifications();
 
   useEffect(() => {
     const auth = getAuth();
 
-    setLogged(auth.currentUser != null);
-
     return onAuthStateChanged(auth, async (user) => {
-      setLogged(user != null);
-      if (user) {
-        notifications.clean();
-        notifications.showNotification({
-          title: "Sesión iniciada",
-          message: `Bienvenido ${user.displayName}`
-        })
-        const db = getFirestore();
-        const userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
+      if (!user) return;
 
-        const last = new Date(userDoc.data().lastSignInTime) ?? new Date(user.metadata.lastSignInTime)
+      notifications.clean();
+      notifications.showNotification({
+        title: "Sesión iniciada",
+        message: `Bienvenido ${user.displayName}`
+      })
+      const db = getFirestore();
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
 
-        const today = new Date().toDateString()
+      const last = new Date(userDoc.data().lastSignInTime) ?? new Date(user.metadata.lastSignInTime) ?? new Date()
 
-        if (isToday(last)) {
-          updateDoc(userRef, { lastSignInTime: today })
-        } else if (isYesterday(last)) {
-          const userData = userDoc.data()
-          const newRacha = (userData.racha ?? 0) + 1
-          const batidoRecord = (userData.Tenaz ?? 0) < newRacha
-          const newTenaz = batidoRecord ? newRacha : (userData.Tenaz ?? 0)
-          await updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
+      const today = new Date().toDateString()
 
-          if (batidoRecord) {
-            checkAchivement("Tenaz", notifications)
-          }
+      if (isToday(last)) {
+        updateDoc(userRef, { lastSignInTime: today })
+      } else if (isYesterday(last)) {
+        const userData = userDoc.data()
+        const newRacha = (userData.racha ?? 0) + 1
+        const batidoRecord = (userData.Tenaz ?? 0) < newRacha
+        const newTenaz = batidoRecord ? newRacha : (userData.Tenaz ?? 0)
+        await updateDoc(userRef, { racha: newRacha, lastSignInTime: today, learnedToday: 0, Tenaz: newTenaz })
 
-          if (today.includes("Sun") || today.includes("Sat")) {
-            await updateDoc(userRef, { "El que persiste": increment() })
-            checkAchivement("El que persiste", notifications)
-          }
-        } else {
-          await updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0 })
-          notifications.showNotification({ title: "Has perdido tu racha", color: "red" })
+        if (batidoRecord) {
+          checkAchivement("Tenaz", notifications)
         }
+
+        if (today.includes("Sun") || today.includes("Sat")) {
+          await updateDoc(userRef, { "El que persiste": increment() })
+          checkAchivement("El que persiste", notifications)
+        }
+      } else {
+        await updateDoc(userRef, { racha: 1, lastSignInTime: today, learnedToday: 0 })
+        notifications.showNotification({ title: "Has perdido tu racha", color: "red" })
       }
+
     });
   }, [])
 
