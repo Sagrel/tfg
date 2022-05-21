@@ -10,6 +10,7 @@ const Register = () => {
 
 	const { state } = useLocation();
 
+	// TODO HACK move this some where else
 	if (getAuth().currentUser) {
 		navigate(state?.from ?? "/")
 	}
@@ -27,6 +28,7 @@ const Register = () => {
 					const email = e.target.email.value
 					const password = e.target.password.value
 					const name = e.target.name.value
+					const profesor = e.target.profesor.value
 
 					const error_contraseña = (m) => {
 						notifications.showNotification({
@@ -50,12 +52,11 @@ const Register = () => {
 							const userCredential = await createUserWithEmailAndPassword(auth, email, password)
 							await updateProfile(userCredential.user, {
 								displayName: name,
-								// TODO update this to something better
-								photoURL: "icons/user.png"
+								photoURL: "https://firebasestorage.googleapis.com/v0/b/tfg-antoniogc.appspot.com/o/unknown-512.webp?alt=media&token=fabc9337-4e79-42c6-9375-9cf2bb0f787b"
 							})
 							const db = getFirestore();
 							const userRef = doc(db, 'users', userCredential.user.uid);
-							await setDoc(userRef, { timer: 10, easyBonus: 2, hardBonus: 1, okBonus: 1.5, learnLimit: 10 })
+							await setDoc(userRef, { timer: 10, easyBonus: 2, hardBonus: 1, okBonus: 1.5, learnLimit: 10, profesor: profesor })
 							notifications.clean()
 							notifications.showNotification({
 								title: "Cuenta creada con exito",
@@ -100,6 +101,12 @@ const Register = () => {
 						required
 						mt="md"
 						label="Estoy de acuerdo con la politica de privacidad"
+					/>
+
+					<Checkbox
+						mt="md"
+						id="profesor"
+						label="Soy un profesor"
 					/>
 
 					<Group position="right" mt="md">
