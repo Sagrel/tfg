@@ -6,7 +6,7 @@ import { doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
 
 const Settings = () => {
-
+    // TODO How do we handle profesor settings
     const { colorScheme, toggleColorScheme } = useMantineColorScheme();
     const dark = colorScheme === 'dark';
 

@@ -1,4 +1,4 @@
-import { Avatar, Button, Card, Center, Paper, Popover, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Avatar, Button, Card, Center, Popover, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -55,7 +55,6 @@ const Students = () => {
 
 	return (
 		<ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
-
 			<SimpleGrid cols="4" m="md">
 				{
 					alumnos.map((alumnno) => {
@@ -65,7 +64,6 @@ const Students = () => {
 					})
 				}
 			</SimpleGrid>
-
 		</ScrollArea>
 	)
 }

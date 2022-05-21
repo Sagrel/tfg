@@ -1,11 +1,12 @@
-import { Button, Center, Group, Popover, RingProgress, ScrollArea, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
+import { Button, Card, Center, Group, Modal, Popover, RingProgress, ScrollArea, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { Check } from "tabler-icons-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { getAuth } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
+import { Show, UserContext } from "../utils";
 
-const Level = ({ elem, canLearn }) => {
+const Level = ({ elem, canLearn, isProfesor }) => {
     const percentageLearning = Math.round((elem.aprendiendo - elem.pendientes) / elem.total * 100);
     const percentageFailed = Math.round(elem.fallidas / elem.total * 100);
     const percentagePending = Math.round((elem.pendientes - elem.fallidas) / elem.total * 100);
@@ -58,21 +59,34 @@ const Level = ({ elem, canLearn }) => {
                 opened={opened}
                 onClose={() => setOpened(false)}
                 target={
-                    <Stack align="center" onClick={() => setOpened((o) => !o)} style={{ cursor: "pointer" }}>
-                        <Text size="xl">{elem.title}</Text>
-                        {ring}
-                    </Stack >
+                    isProfesor ?
+                        // Make this less ugly
+                        <Button onClick={() => setOpened((o) => !o)} >{elem.title}</Button >
+                        :
+                        <Stack align="center" onClick={() => setOpened((o) => !o)} style={{ cursor: "pointer" }}>
+                            <Text size="xl">{elem.title}</Text>
+                            {ring}
+                        </Stack >
                 }
                 width={260}
                 position="bottom"
                 withArrow
             >
-                <Stack>
-                    <Button disabled={elem.aprendiendo == elem.total || canLearn == 0} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
-                    <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
-                    <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
-                    <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
-                </Stack>
+                <Show condition={isProfesor}>
+                    <Stack>
+                        { /* TODO make compartir work */}
+                        <Button onClick={() => { navigate("create/" + elem.id) }}>Compartir</Button>
+                        <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
+                    </Stack>
+                </Show>
+                <Show condition={!isProfesor}>
+                    <Stack>
+                        <Button disabled={elem.aprendiendo == elem.total || canLearn == 0} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
+                        <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
+                        <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
+                        <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
+                    </Stack>
+                </Show>
             </Popover >
         </Center>
     )
@@ -86,6 +100,9 @@ const Study = () => {
     const [racha, setRacha] = useState(0)
     const [mazos, setMazos] = useState([]);
     const [canLearn, setCanLearn] = useState(0)
+
+    const isProfesor = useContext(UserContext)
+
 
     useEffect(async () => {
         const db = getFirestore();
@@ -121,23 +138,37 @@ const Study = () => {
 
     return (
         <ScrollArea style={{ height: "100%", width: "80vw" }} type="never">
+
             <Stack p="lg">
-                <Group position="center" grow>
-                    <Button disabled={pending === 0} onClick={() => { navigate("review") }}>
-                        Repasar pendientes {pending}
-                    </Button>
-                    <Center>
-                        <h4>
-                            Racha de días: {racha}
-                        </h4>
-                    </Center>
-                    <Button onClick={() => { navigate("create") }}>
-                        Añadir contenido
-                    </Button>
-                </Group>
+                {
+                    isProfesor ?
+                        <Group position="center" grow>
+
+                            <Button onClick={() => { navigate("create") }}>
+                                Añadir contenido
+                            </Button>
+                        </Group>
+                        :
+                        <Group position="center" grow>
+
+                            <Button disabled={pending === 0} onClick={() => { navigate("review") }}>
+                                Repasar pendientes {pending}
+                            </Button>
+                            <Center>
+                                <h4>
+                                    Racha de días: {racha}
+                                </h4>
+                            </Center>
+
+                            <Button onClick={() => { navigate("create") }}>
+                                Añadir contenido
+                            </Button>
+                        </Group>
+                }
+
                 <SimpleGrid cols={2}>
                     {
-                        mazos.map((elem, i) => <div key={i}><Level elem={elem} canLearn={canLearn}></Level></div>)
+                        mazos.map((elem, i) => <Level key={i} elem={elem} canLearn={canLearn} isProfesor={isProfesor} />)
                     }
                 </SimpleGrid>
             </Stack>
