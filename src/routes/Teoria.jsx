@@ -28,7 +28,7 @@ const Teoria = () => {
 			const userRef = doc(db, "users", user.uid)
 			await updateDoc(userRef, { Empollon: increment(1) })
 			checkAchivement("Empollon", notification)
-		}, 10000)
+		}, 60000)
 
 		return () => clearInterval(interval)
 

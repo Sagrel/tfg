@@ -1,6 +1,6 @@
 import { Button, Card, Center, Group, Modal, Popover, RingProgress, ScrollArea, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import { Check } from "tabler-icons-react";
+import { Book, Check, Notebook } from "tabler-icons-react";
 import { useState, useEffect, useContext } from "react";
 import { getAuth } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
@@ -16,41 +16,53 @@ const Level = ({ elem, canLearn, isProfesor }) => {
     const navigate = useNavigate();
 
 
-    let ring = percentageFailed == 0 && percentagePending == 0 && percentageNew == 0 ?
+    let ring = isProfesor ?
         (<RingProgress
-            sections={[{ value: 100, color: 'teal' }]}
+            sections={[{ value: 100, color: "blue" }]}
             label={
                 <Center>
-                    <ThemeIcon color="teal" variant="light" radius="xl" size="xl">
-                        <Check size={22} />
+                    <ThemeIcon variant="light" radius="xl" size="xl">
+                        <Notebook size={40} />
                     </ThemeIcon>
                 </Center>
             }
-        />) :
-        (<RingProgress
-
-            sections={[
-                { value: percentageLearning, color: 'teal' },
-                { value: percentagePending, color: 'yellow' },
-                { value: percentageFailed, color: 'red' },
-                { value: percentageNew, color: 'blue' }]}
-            label={
-
-                <Text weight={700} align="center" size="xl">
-                    <Text color="blue" weight={700} size="xl" inherit component="span">
-                        {Math.min(elem.total - elem.aprendiendo, canLearn)}
-                    </Text>
-                    /
-                    <Text color="red" weight={700} size="xl" inherit component="span">
-                        {elem.fallidas}
-                    </Text>
-                    /
-                    <Text color="yellow" weight={700} size="xl" inherit component="span">
-                        {elem.pendientes - elem.fallidas}
-                    </Text>
-                </Text>
-            }
         />)
+        :
+        percentageFailed == 0 && percentagePending == 0 && percentageNew == 0 ?
+            (<RingProgress
+                sections={[{ value: 100, color: 'teal' }]}
+                label={
+                    <Center>
+                        <ThemeIcon color="teal" variant="light" radius="xl" size="xl">
+                            <Check size={22} />
+                        </ThemeIcon>
+                    </Center>
+                }
+            />) :
+            (<RingProgress
+
+                sections={[
+                    { value: percentageLearning, color: 'teal' },
+                    { value: percentagePending, color: 'yellow' },
+                    { value: percentageFailed, color: 'red' },
+                    { value: percentageNew, color: 'blue' }]}
+                label={
+
+                    <Text weight={700} align="center" size="xl">
+                        <Text color="blue" weight={700} size="xl" inherit component="span">
+                            {Math.min(elem.total - elem.aprendiendo, canLearn)}
+                        </Text>
+                        /
+                        <Text color="red" weight={700} size="xl" inherit component="span">
+                            {elem.fallidas}
+                        </Text>
+                        /
+                        <Text color="yellow" weight={700} size="xl" inherit component="span">
+                            {elem.pendientes - elem.fallidas}
+                        </Text>
+                    </Text>
+                }
+            />)
 
 
     return (
@@ -59,14 +71,10 @@ const Level = ({ elem, canLearn, isProfesor }) => {
                 opened={opened}
                 onClose={() => setOpened(false)}
                 target={
-                    isProfesor ?
-                        // Make this less ugly
-                        <Button onClick={() => setOpened((o) => !o)} >{elem.title}</Button >
-                        :
-                        <Stack align="center" onClick={() => setOpened((o) => !o)} style={{ cursor: "pointer" }}>
-                            <Text size="xl">{elem.title}</Text>
-                            {ring}
-                        </Stack >
+                    <Stack align="center" onClick={() => setOpened((o) => !o)} style={{ cursor: "pointer" }}>
+                        <Text size="xl">{elem.title}</Text>
+                        {ring}
+                    </Stack >
                 }
                 width={260}
                 position="bottom"
@@ -74,8 +82,8 @@ const Level = ({ elem, canLearn, isProfesor }) => {
             >
                 <Show condition={isProfesor}>
                     <Stack>
-                        { /* TODO make compartir work */}
-                        <Button onClick={() => { navigate("create/" + elem.id) }}>Compartir</Button>
+                        { /* TODO make Estatisticas work */}
+                        <Button onClick={() => { navigate("create/" + elem.id) }}>Estadisticas</Button>
                         <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
                     </Stack>
                 </Show>

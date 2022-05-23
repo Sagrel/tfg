@@ -24,7 +24,6 @@
 2. El sistema de logros lanzará notificaciones cuando se alcance una meta. 
 3. El usuario podrá desbloquear "titulos" al obtener logros. 
 4. El usuario podrá equiparse un "titulo", el cual se mostrará junto a su nombre. // TODO
-5. El usuario recibirá "puntos de comprension" al completar repasos. La cantidad de puntos dependerá de su velocidad al responder. // TODO quitar
 6. Los logros seran:
    - Dias de rachas seguidos: Tenaz      
    - Repasos correctos: Erudito            

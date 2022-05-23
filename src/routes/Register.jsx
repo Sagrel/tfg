@@ -3,7 +3,7 @@ import { TextInput, Checkbox, Button, Group, Box, } from '@mantine/core';
 import { useNotifications } from "@mantine/notifications";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { doc, getFirestore, setDoc } from "firebase/firestore";
-// TODO Add option to register as proffesor 
+
 const Register = () => {
 	const notifications = useNotifications();
 	const navigate = useNavigate();

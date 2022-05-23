@@ -10,7 +10,6 @@ import { checkAchivement, handleImageUpload } from "../utils";
 
 // TODO Add graphs with info on reviews, cards learned, had cards, ...
 // TODO Show titles
-// TODO show points
 const User = () => {
     const notifications = useNotifications();
     const user = getAuth().currentUser;

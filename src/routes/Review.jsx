@@ -15,7 +15,6 @@ const Review = () => {
 
 	const { mazo } = useParams();
 
-	// TODO mix reviewing a deck and learning new cards from that deck
 	const learning = mazo ? true : false
 
 	const navigate = useNavigate();

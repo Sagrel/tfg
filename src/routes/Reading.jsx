@@ -8,6 +8,17 @@ import { Check, PlayerPlay, PlayerTrackNext, PlayerTrackPrev, X } from "tabler-i
 import { checkAchivement } from "../utils";
 import { useNotifications } from "@mantine/notifications";
 
+// reference: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+/* Randomize array in-place using Durstenfeld shuffle algorithm */
+function shuffleArray(array) {
+	for (var i = array.length - 1; i > 0; i--) {
+		var j = Math.floor(Math.random() * (i + 1));
+		var temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+	return array
+}
 
 const Reading = () => {
 
@@ -25,17 +36,15 @@ const Reading = () => {
 
 	useEffect(async () => {
 		const user = getAuth().currentUser;
-		if (!user) return;
 		const db = getFirestore();
 		const mazoRef = doc(db, "users", user.uid, "mazos", tema);
 		const mazoDoc = await getDoc(mazoRef);
 		setMazo({ id: mazoDoc.id, ...mazoDoc.data() })
 		setSentences(getSentences(getText(mazoDoc.data().content)))
 
-		// TODO set the number of questions lo load as a setting
 		const preguntasRef = collection(db, mazoRef.path, "preguntas")
 		const preguntasDocs = await getDocs(preguntasRef)
-		const preguntasData = preguntasDocs.docs.map(doc => doc.data())
+		const preguntasData = shuffleArray(preguntasDocs.docs).slice(0, 5).map(doc => doc.data())
 		setQuestions(preguntasData)
 		setAnswers(preguntasData.map(
 			(pregunta) =>
@@ -140,7 +149,6 @@ const Reading = () => {
 								}
 								<Center>
 									{
-										// TODO incrementar logros si haciertas todas la preguntas
 										!showResults ?
 											<Button m="md" onClick={async () => {
 												setShowResults(true)
