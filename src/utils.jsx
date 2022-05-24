@@ -1,5 +1,5 @@
 import { getAuth } from "firebase/auth";
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getFirestore, setDoc, updateDoc } from "firebase/firestore";
 import { createContext } from "react";
 import { Star } from "tabler-icons-react";
 
@@ -89,3 +89,122 @@ export const Show = ({ condition, children }) => {
 }
 
 export const UserContext = createContext();
+
+export const createDeck = async (title, content, notes, cards, questions, userId, mazoId) => {
+	const db = getFirestore()
+	const creador = getAuth().currentUser.uid
+	const mazosRef = collection(db, 'users', userId, "mazos");
+
+	// La primera vez que se llama se generan en el profesor y se guardan los ids para usar los mismos en los alumnos
+	if (mazoId) {
+		const mazoRef = doc(db, mazosRef.path, mazoId)
+		await setDoc(mazoRef, { title, content, creador })
+	} else {
+		mazoId = (await addDoc(mazosRef, { title, content, creador })).id;
+	}
+
+	const notasRef = collection(db, mazosRef.path, mazoId, "notas");
+	notes.forEach(async (note) => {
+		if (note.id) {
+			const noteRef = doc(db, notasRef.path, note.id)
+			const { id, ...newNote } = note
+			await setDoc(noteRef, cleanObject(newNote))
+		} else {
+			const doc = await addDoc(notasRef, note)
+			note.id = doc.id
+		}
+	});
+	const tarjetasRef = collection(db, mazosRef.path, mazoId, "tarjetas");
+	cards.forEach(async (card) => {
+		card = cleanObject(card)
+		if (card.id) {
+			const cardRef = doc(db, tarjetasRef.path, card.id)
+			const { id, ...newCard } = card
+			await setDoc(cardRef, newCard)
+		} else {
+			const doc = await addDoc(tarjetasRef, { interval: 1, ...card })
+			card.id = doc.id
+		}
+	});
+	const preguntasRef = collection(db, mazosRef.path, mazoId, "preguntas");
+	questions.forEach(async (question) => {
+		question = cleanObject(question)
+		if (question.id) {
+			const preguntaRef = doc(db, preguntasRef.path, question.id)
+			const { id, ...newQuestion } = question
+			await setDoc(preguntaRef, newQuestion)
+		} else {
+			const doc = await addDoc(preguntasRef, question)
+			question.id = doc.id
+		}
+	});
+
+	return mazoId
+}
+
+export const editDeck = async (title, content, notes, cards, questions, deletedCards, deletedNotes, deletedQuestions, userId, mazoId) => {
+	const db = getFirestore()
+	const mazosRef = collection(db, 'users', userId, "mazos");
+	const mazoRef = doc(db, 'users', userId, "mazos", mazoId);
+	await updateDoc(mazoRef, { title, content });
+	const notasRef = collection(db, mazosRef.path, mazoId, "notas");
+	notes.forEach(async (note) => {
+		if (note.id) {
+			const noteRef = doc(db, notasRef.path, note.id)
+			const { id, ...newNote } = note
+			if ((await getDoc(noteRef)).exists) {
+				await updateDoc(noteRef, cleanObject(newNote))
+			} else {
+				await setDoc(noteRef, cleanObject(newNote))
+			}
+		} else {
+			const doc = await addDoc(notasRef, note)
+			note.id = doc.id
+		}
+	});
+	const tarjetasRef = collection(db, mazosRef.path, mazoId, "tarjetas");
+	cards.forEach(async (card) => {
+		card = cleanObject(card)
+		if (card.id) {
+			const cardRef = doc(db, tarjetasRef.path, card.id)
+			const { id, ...newCard } = card
+			if ((await getDoc(cardRef)).exists) {
+				await updateDoc(cardRef, newCard)
+			} else {
+				await setDoc(cardRef, newCard)
+			}
+		} else {
+			const doc = await addDoc(tarjetasRef, { interval: 1, ...card })
+			card.id = doc.id
+		}
+	});
+	const preguntasRef = collection(db, mazosRef.path, mazoId, "preguntas");
+	questions.forEach(async (question) => {
+		question = cleanObject(question)
+		if (question.id) {
+			const preguntaRef = doc(db, preguntasRef.path, question.id)
+			const { id, ...newQuestion } = question
+			if ((await getDoc(preguntaRef)).exists) {
+				await updateDoc(preguntaRef, newQuestion)
+			} else {
+				await setDoc(preguntaRef, newQuestion)
+			}
+		} else {
+			const doc = await addDoc(preguntasRef, question)
+			question.id = doc.id
+		}
+	});
+
+	for (const cardId of deletedCards) {
+		await deleteDoc(doc(db, mazosRef.path, mazoId, "tarjetas", cardId))
+	}
+
+	for (const noteId of deletedNotes) {
+		await deleteDoc(doc(db, mazosRef.path, mazoId, "notas", noteId))
+	}
+
+	for (const questionId of deletedQuestions) {
+		await deleteDoc(doc(db, mazosRef.path, mazoId, "preguntas", questionId))
+	}
+}
+

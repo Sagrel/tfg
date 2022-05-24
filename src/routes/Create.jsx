@@ -1,99 +1,13 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from "react"
 
 import { RichTextEditor } from '@mantine/rte';
-import { ActionIcon, Button, Card, Center, Checkbox, Grid, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Card, Center, Checkbox, Group, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { getAuth } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { CirclePlus, Rotate360 } from "tabler-icons-react";
 import { useNotifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
-import { checkAchivement, cleanObject, Show } from "../utils";
-import { handleImageUpload } from "../utils";
-
-
-
-const save = async (title, content, notes, cards, notifications, id, deletedCards, deletedNotes, questions, deletedQuestions) => {
-	try {
-		const user = getAuth().currentUser;
-		const db = getFirestore();
-		const mazosRef = collection(db, 'users', user.uid, "mazos");
-
-		// If we have a deck we edit it, other whise create it
-		let mazoId;
-		if (id) {
-			const mazoDoc = doc(db, mazosRef.path, id);
-			await updateDoc(mazoDoc, { title, content });
-			mazoId = id;
-		} else {
-			mazoId = await (await addDoc(mazosRef, { title, content })).id;
-		}
-
-		const notasRef = collection(db, mazosRef.path, mazoId, "notas");
-		notes.forEach(async (note) => {
-			if (note.id) {
-				const noteRef = doc(db, notasRef.path, note.id)
-				const { id, ...updatedNote } = note
-
-				updateDoc(noteRef, cleanObject(updatedNote))
-			} else {
-				await addDoc(notasRef, note)
-			}
-		});
-
-		const tarjetasRef = collection(db, mazosRef.path, mazoId, "tarjetas");
-		cards.forEach(async (card) => {
-			card = cleanObject(card)
-			if (card.id) {
-				const cardRef = doc(db, tarjetasRef.path, card.id)
-				delete card["id"]
-				updateDoc(cardRef, card)
-			} else {
-				const interval = 1;
-				await addDoc(tarjetasRef, { interval, ...card })
-			}
-		});
-
-		const preguntasRef = collection(db, mazosRef.path, mazoId, "preguntas");
-		questions.forEach(async (question) => {
-			question = cleanObject(question)
-			if (question.id) {
-				const preguntaRef = doc(db, preguntasRef.path, question.id)
-				delete question["id"]
-				updateDoc(preguntaRef, question)
-			} else {
-				await addDoc(preguntasRef, question)
-			}
-		});
-
-		for (const cardId of deletedCards) {
-			await deleteDoc(doc(db, mazosRef.path, mazoId, "tarjetas", cardId))
-		}
-
-		for (const noteId of deletedNotes) {
-			await deleteDoc(doc(db, mazosRef.path, mazoId, "notas", noteId))
-		}
-
-		for (const questionId of deletedQuestions) {
-			await deleteDoc(doc(db, mazosRef.path, mazoId, "preguntas", questionId))
-		}
-
-		notifications.clean()
-		notifications.showNotification({
-			title: "Leccion guardada con exito",
-			message: `La leccion ya debería aparecer en la pestaña de inicio`,
-			color: "green"
-		})
-	} catch (e) {
-		console.error(e)
-		notifications.clean()
-		notifications.showNotification({
-			title: "Error",
-			message: "No se ha podido crear la leccion",
-			color: "red"
-		})
-	}
-}
-
+import { checkAchivement, createDeck, editDeck, Show, handleImageUpload, UserContext } from "../utils";
 
 
 const EliminarGuardar = ({ text, setModalData, setDeleted, setArray, close, original, creating, index }) => {
@@ -280,8 +194,6 @@ const CardPreview = ({ name, setSelected }) => {
 }
 
 
-
-
 const AddPreview = ({ activate }) => {
 	return (
 		<ActionIcon onClick={activate} color="teal">
@@ -311,6 +223,8 @@ const Create = () => {
 	const [selectedCard, setSelectedCard] = useState(-1)
 	const [selectedNote, setSelectedNote] = useState(-1)
 	const [selectedQuestion, setSelectedQuestion] = useState(-1)
+
+	const isProfesor = useContext(UserContext)
 
 	useEffect(async () => {
 		// Si estamos editando carga los datos del mazo, si no cancela
@@ -343,8 +257,54 @@ const Create = () => {
 			<ScrollArea style={{ height: "100vh", width: "100vw" }} type="never">
 				<form onSubmit={async (e) => {
 					e.preventDefault()
+					const myId = getAuth().currentUser.uid
+					const alumnos = isProfesor ? (await getDoc(doc(getFirestore(), "users", myId))).data().alumnos ?? [] : []
+					if (idMazo) {
+						try {
+							await editDeck(title, content, notes, cards, questions, deletedNotes, deletedCards, deletedQuestions, myId, idMazo)
 
-					await save(title, content, notes, cards, notifications, idMazo, deletedCards, deletedNotes, questions, deletedQuestions)
+							if (isProfesor) {
+								await Promise.all(
+									alumnos.map(alumno => editDeck(title, content, notes, cards, questions, deletedNotes, deletedCards, deletedQuestions, alumno, idMazo))
+								)
+							}
+							notifications.showNotification({
+								title: "Lección creada con exito",
+								color: "green"
+							})
+						} catch (e) {
+							console.error(e)
+							notifications.clean()
+							notifications.showNotification({
+								title: "Error creando la lección",
+								message: "Intentalo más tarde",
+								color: "red"
+							})
+						}
+					} else {
+						try {
+
+							const mazoId = await createDeck(title, content, notes, cards, questions, myId)
+
+							if (isProfesor) {
+								await Promise.all(
+									alumnos.map(alumno => createDeck(title, content, notes, cards, questions, alumno, mazoId))
+								)
+							}
+							notifications.showNotification({
+								title: "Lección editada con exito",
+								color: "green"
+							})
+						} catch (e) {
+							console.error(e)
+							notifications.clean()
+							notifications.showNotification({
+								title: "Error editando lección",
+								message: "Intentalo más tarde",
+								color: "red"
+							})
+						}
+					}
 
 					// Si estamos creando un mazo nuevo avanzamos el logro
 					if (!idMazo) {
@@ -352,8 +312,8 @@ const Create = () => {
 						const user = getAuth().currentUser
 						const userRef = doc(db, "users", user.uid)
 						await updateDoc(userRef, { "Creador de conocimiento": increment(1) })
-	
-						checkAchivement("Creador de conocimiento", notifications)						
+
+						checkAchivement("Creador de conocimiento", notifications)
 					}
 
 					navigate("/")
@@ -403,14 +363,32 @@ const Create = () => {
 						<Group grow>
 							<Button color="red" onClick={() => {
 								setDeleteModal({
-									text: "esta lectura completamente", action: () => {
-										if (idMazo) {
-											const user = getAuth().currentUser;
-											const db = getFirestore();
-											const mazoRef = doc(db, 'users', user.uid, "mazos", idMazo);
-											deleteDoc(mazoRef)
+									text: "esta lectura completamente", action: async () => {
+										try {
+
+											if (idMazo) {
+												const myId = getAuth().currentUser.uid
+												const db = getFirestore();
+												const mazoRef = doc(db, 'users', myId, "mazos", idMazo);
+												await deleteDoc(mazoRef)
+
+												if (isProfesor) {
+													const alumnos = isProfesor ? (await getDoc(doc(getFirestore(), "users", myId))).data().alumnos ?? [] : []
+
+													await Promise.all(
+														alumnos.map(alumno => {
+															const mazoRef = doc(db, 'users', alumno, "mazos", idMazo);
+															return deleteDoc(mazoRef)
+														})
+													)
+												}
+											}
+											notifications.showNotification({ color: "green", title: "Lección eliminada correctamente" })
+											navigate("/")
+										} catch (e) {
+											console.error(e)
+											notifications.showNotification({ color: "red", title: "Error al eliminar la lección" })
 										}
-										navigate("/")
 									}
 								})
 
