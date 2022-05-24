@@ -111,7 +111,7 @@ const Level = ({ elem, canLearn }) => {
                     <Button disabled={elem.aprendiendo == elem.total || canLearn == 0} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
                     <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
-                    <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
+                    <Button disabled={elem.creador != getAuth().currentUser.uid} onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
                 </Stack>
             </Popover >
         </Center>

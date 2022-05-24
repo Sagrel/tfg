@@ -234,6 +234,12 @@ const Create = () => {
 		const mazoRef = doc(db, "users", user.uid, "mazos", idMazo)
 		const mazo = (await getDoc(mazoRef)).data()
 
+		if (mazo.creador != user.uid) {
+			navigate("/")
+			notifications.showNotification({ color: "red", title: "Esta lección no te pertenece" })
+			return
+		}
+
 		setTitle(mazo.title)
 		setContent(mazo.content)
 
