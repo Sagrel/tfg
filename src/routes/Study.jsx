@@ -1,12 +1,51 @@
-import { Button, Card, Center, Group, Modal, Popover, RingProgress, ScrollArea, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
+import { Avatar, Button, Card, Center, Group, Modal, Popover, RingProgress, ScrollArea, SimpleGrid, Stack, Text, TextInput, ThemeIcon } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { Book, Check, Notebook } from "tabler-icons-react";
 import { useState, useEffect, useContext } from "react";
 import { getAuth } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
-import { Show, UserContext } from "../utils";
+import { arrayUnion, collection, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
+import { isYesterday, Show, UserContext } from "../utils";
 
-const Level = ({ elem, canLearn, isProfesor }) => {
+const ProfesorLevel = ({ elem }) => {
+
+    const [opened, setOpened] = useState(false);
+    const navigate = useNavigate();
+
+    return (
+        <Center>
+            <Popover
+                opened={opened}
+                onClose={() => setOpened(false)}
+                target={
+                    <Stack align="center" onClick={() => setOpened((o) => !o)} style={{ cursor: "pointer" }}>
+                        <Text size="xl">{elem.title}</Text>
+                        <RingProgress
+                            sections={[{ value: 100, color: "blue" }]}
+                            label={
+                                <Center>
+                                    <ThemeIcon variant="light" radius="xl" size="xl">
+                                        <Notebook size={40} />
+                                    </ThemeIcon>
+                                </Center>
+                            }
+                        />
+                    </Stack >
+                }
+                width={260}
+                position="bottom"
+                withArrow
+            >
+                <Stack>
+                    { /* TODO make Estatisticas work */}
+                    <Button onClick={() => { navigate("create/" + elem.id) }}>Estadisticas</Button>
+                    <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
+                </Stack>
+            </Popover >
+        </Center>
+    )
+}
+
+const Level = ({ elem, canLearn }) => {
     const percentageLearning = Math.round((elem.aprendiendo - elem.pendientes) / elem.total * 100);
     const percentageFailed = Math.round(elem.fallidas / elem.total * 100);
     const percentagePending = Math.round((elem.pendientes - elem.fallidas) / elem.total * 100);
@@ -16,53 +55,41 @@ const Level = ({ elem, canLearn, isProfesor }) => {
     const navigate = useNavigate();
 
 
-    let ring = isProfesor ?
+    let ring = percentageFailed == 0 && percentagePending == 0 && percentageNew == 0 ?
         (<RingProgress
-            sections={[{ value: 100, color: "blue" }]}
+            sections={[{ value: 100, color: 'teal' }]}
             label={
                 <Center>
-                    <ThemeIcon variant="light" radius="xl" size="xl">
-                        <Notebook size={40} />
+                    <ThemeIcon color="teal" variant="light" radius="xl" size="xl">
+                        <Check size={22} />
                     </ThemeIcon>
                 </Center>
             }
-        />)
-        :
-        percentageFailed == 0 && percentagePending == 0 && percentageNew == 0 ?
-            (<RingProgress
-                sections={[{ value: 100, color: 'teal' }]}
-                label={
-                    <Center>
-                        <ThemeIcon color="teal" variant="light" radius="xl" size="xl">
-                            <Check size={22} />
-                        </ThemeIcon>
-                    </Center>
-                }
-            />) :
-            (<RingProgress
+        />) :
+        (<RingProgress
 
-                sections={[
-                    { value: percentageLearning, color: 'teal' },
-                    { value: percentagePending, color: 'yellow' },
-                    { value: percentageFailed, color: 'red' },
-                    { value: percentageNew, color: 'blue' }]}
-                label={
+            sections={[
+                { value: percentageLearning, color: 'teal' },
+                { value: percentagePending, color: 'yellow' },
+                { value: percentageFailed, color: 'red' },
+                { value: percentageNew, color: 'blue' }]}
+            label={
 
-                    <Text weight={700} align="center" size="xl">
-                        <Text color="blue" weight={700} size="xl" inherit component="span">
-                            {Math.min(elem.total - elem.aprendiendo, canLearn)}
-                        </Text>
-                        /
-                        <Text color="red" weight={700} size="xl" inherit component="span">
-                            {elem.fallidas}
-                        </Text>
-                        /
-                        <Text color="yellow" weight={700} size="xl" inherit component="span">
-                            {elem.pendientes - elem.fallidas}
-                        </Text>
+                <Text weight={700} align="center" size="xl">
+                    <Text color="blue" weight={700} size="xl" inherit component="span">
+                        {Math.min(elem.total - elem.aprendiendo, canLearn)}
                     </Text>
-                }
-            />)
+                    /
+                    <Text color="red" weight={700} size="xl" inherit component="span">
+                        {elem.fallidas}
+                    </Text>
+                    /
+                    <Text color="yellow" weight={700} size="xl" inherit component="span">
+                        {elem.pendientes - elem.fallidas}
+                    </Text>
+                </Text>
+            }
+        />)
 
 
     return (
@@ -80,21 +107,12 @@ const Level = ({ elem, canLearn, isProfesor }) => {
                 position="bottom"
                 withArrow
             >
-                <Show condition={isProfesor}>
-                    <Stack>
-                        { /* TODO make Estatisticas work */}
-                        <Button onClick={() => { navigate("create/" + elem.id) }}>Estadisticas</Button>
-                        <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
-                    </Stack>
-                </Show>
-                <Show condition={!isProfesor}>
-                    <Stack>
-                        <Button disabled={elem.aprendiendo == elem.total || canLearn == 0} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
-                        <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
-                        <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
-                        <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
-                    </Stack>
-                </Show>
+                <Stack>
+                    <Button disabled={elem.aprendiendo == elem.total || canLearn == 0} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
+                    <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
+                    <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
+                    <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
+                </Stack>
             </Popover >
         </Center>
     )
@@ -109,57 +127,127 @@ const Study = () => {
     const [mazos, setMazos] = useState([]);
     const [canLearn, setCanLearn] = useState(0)
 
+    // Estado añadir alumno
+    const [open, setOpen] = useState(false)
+    const [busqueda, setBusqueda] = useState("")
+    const [alumnos, setAlumnos] = useState([])
+    const [seleccionados, setSeleccionados] = useState([])
+
     const isProfesor = useContext(UserContext)
 
+    const user = getAuth().currentUser
 
     useEffect(async () => {
         const db = getFirestore();
-        const user = getAuth().currentUser
         const userRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userRef)
         const userData = userDoc.data()
-        setRacha(userData.racha ?? 0) // FIXME this happens before the change is actually done in the database 
-        setCanLearn(userData.learnLimit - userData.learnedToday)
+
         const mazosRef = collection(db, "users", user.uid, "mazos");
         const mazos = await getDocs(mazosRef);
 
-        setMazos(await Promise.all(mazos.docs.map(async (mazo) => {
-            // Tarjetas dentro del mazo en cuestion
-            const tarjetasRef = collection(db, "users", user.uid, "mazos", mazo.id, "tarjetas");
-            const tarjetas = await getDocs(tarjetasRef)
-            // Numero total de tarjetas en el mazo
-            const total = tarjetas.docs.length
-            // Array con las tarjetas que están en proceso de aprendizaje
-            const tarjetasEnAprendizaje = tarjetas.docs.filter(t => t.data()["due date"])
-            // Numero de tarjetas en aprendizaje
-            const aprendiendo = tarjetasEnAprendizaje.length
-            // Array con las tarjetas que has fallado
-            const fallidas = tarjetasEnAprendizaje.filter(t => t.data()["failed"]).length
-            // Numero de tarjetas en aprendizaje que tienes pendiente para hoy
-            const pendientes = tarjetasEnAprendizaje.filter(t => new Date(t.data()["due date"]) <= new Date()).length
-            // Actualizamos el numero de tarjetas a repasar
-            setPending(old => old + pendientes)
-            // Nos quedamos con la información del mazo que nos importa
-            return { id: mazo.id, ...mazo.data(), total, aprendiendo, fallidas, pendientes }
-        })))
-    }, [])
+        if (isProfesor) {
+            const misAlumnos = userData.alumnos ?? []
+
+            const usersRef = collection(db, "users")
+            const users = await getDocs(usersRef)
+            setAlumnos(
+                users.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(user => !misAlumnos.includes(user.id) && !user.profesor)
+            )
+            setMazos(mazos.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+        } else {
+            setRacha(userData.racha ?? 0) // FIXME this happens before the change is actually done in the database 
+            setCanLearn(userData.learnLimit - userData.learnedToday)
+
+
+            setMazos(await Promise.all(mazos.docs.map(async (mazo) => {
+                // Tarjetas dentro del mazo en cuestion
+                const tarjetasRef = collection(db, "users", user.uid, "mazos", mazo.id, "tarjetas");
+                const tarjetas = await getDocs(tarjetasRef)
+                // Numero total de tarjetas en el mazo
+                const total = tarjetas.docs.length
+                // Array con las tarjetas que están en proceso de aprendizaje
+                const tarjetasEnAprendizaje = tarjetas.docs.filter(t => t.data()["due date"])
+                // Numero de tarjetas en aprendizaje
+                const aprendiendo = tarjetasEnAprendizaje.length
+                // Array con las tarjetas que has fallado
+                const fallidas = tarjetasEnAprendizaje.filter(t => t.data()["failed"]).length
+                // Numero de tarjetas en aprendizaje que tienes pendiente para hoy
+                const pendientes = tarjetasEnAprendizaje.filter(t => new Date(t.data()["due date"]) <= new Date()).length
+                // Actualizamos el numero de tarjetas a repasar
+                setPending(old => old + pendientes)
+                // Nos quedamos con la información del mazo que nos importa
+                return { id: mazo.id, ...mazo.data(), total, aprendiendo, fallidas, pendientes }
+            })))
+        }
+
+    }, [isProfesor])
 
     return (
         <ScrollArea style={{ height: "100%", width: "80vw" }} type="never">
-
+            <Modal opened={open} onClose={() => setOpen(false)} centered size="xl">
+                <h2>Selecciona los alumnos que quieras añadir</h2>
+                <TextInput label="Buscar" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+                <SimpleGrid cols={3} m="md">
+                    {
+                        alumnos
+                            .filter(alumno => alumno.name.toUpperCase().includes(busqueda.toUpperCase()))
+                            .map(alumno =>
+                                <Card key={alumno.id}
+                                    onClick={
+                                        () => setSeleccionados(old => {
+                                            const idx = old.findIndex((elem => elem == alumno.id))
+                                            if (idx == -1) {
+                                                return [...old, alumno.id]
+                                            } else {
+                                                old.splice(idx, 1)
+                                                return [...old]
+                                            }
+                                        })
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <Stack align="center">
+                                        <Avatar size="xl" src={alumno.photo}></Avatar>
+                                        <Text color={seleccionados.includes(alumno.id) ? "green" : ""}>{alumno.name}</Text>
+                                    </Stack >
+                                </Card>
+                            )
+                    }
+                </SimpleGrid>
+                <Group grow >
+                    <Button color="red" onClick={() => {
+                        setSeleccionados([])
+                        setOpen(false)
+                    }
+                    }>Cancelar</Button>
+                    <Button color="green" disabled={seleccionados.length == 0} onClick={() => {
+                        const user = getAuth().currentUser
+                        const db = getFirestore();
+                        const userRef = doc(db, "users", user.uid);
+                        updateDoc(userRef, { alumnos: arrayUnion(...seleccionados) })
+                        setSeleccionados([])
+                        setOpen(false)
+                        // TODO give it all the decks
+                    }}>Añadir</Button>
+                </Group>
+            </Modal>
             <Stack p="lg">
                 {
                     isProfesor ?
                         <Group position="center" grow>
-
-                            <Button onClick={() => { navigate("create") }}>
+                            <Button onClick={() => setOpen(true)}>
+                                Añadir alumno
+                            </Button>
+                            <Button onClick={() => navigate("create")}>
                                 Añadir contenido
                             </Button>
                         </Group>
                         :
                         <Group position="center" grow>
-
-                            <Button disabled={pending === 0} onClick={() => { navigate("review") }}>
+                            <Button disabled={pending === 0} onClick={() => navigate("review")}>
                                 Repasar pendientes {pending}
                             </Button>
                             <Center>
@@ -167,8 +255,7 @@ const Study = () => {
                                     Racha de días: {racha}
                                 </h4>
                             </Center>
-
-                            <Button onClick={() => { navigate("create") }}>
+                            <Button onClick={() => navigate("create")}>
                                 Añadir contenido
                             </Button>
                         </Group>
@@ -176,7 +263,11 @@ const Study = () => {
 
                 <SimpleGrid cols={2}>
                     {
-                        mazos.map((elem, i) => <Level key={i} elem={elem} canLearn={canLearn} isProfesor={isProfesor} />)
+                        isProfesor
+                            ?
+                            mazos.map((elem, i) => <ProfesorLevel key={i} elem={elem} />)
+                            :
+                            mazos.map((elem, i) => <Level key={i} elem={elem} canLearn={canLearn} />)
                     }
                 </SimpleGrid>
             </Stack>
