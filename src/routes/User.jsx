@@ -1,4 +1,4 @@
-import { Avatar, Button, Group, ScrollArea, Text, Stack, Modal, TextInput, useMantineTheme } from "@mantine/core";
+import { Avatar, Button, Group, ScrollArea, Text, Stack, Modal, TextInput, useMantineTheme, Card, SimpleGrid } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useNotifications } from "@mantine/notifications";
 import { deleteUser, getAuth, updateProfile } from "firebase/auth";
@@ -24,6 +24,8 @@ const User = () => {
 
     const [loading, setLoading] = useState(false)
 
+    const [profesores, setProfesores] = useState([])
+
     const theme = useMantineTheme();
 
     const navigate = useNavigate();
@@ -38,6 +40,13 @@ const User = () => {
         setOriginalUserName(userData.name)
         setImageUrl(userData.photo)
         setOriginalImageUrl(userData.photo)
+        setProfesores(
+            await Promise.all(
+                (userData.profesores ?? []).map(async profesorId => {
+                    const prof = await getDoc(doc(db, "users", profesorId))
+                    return { id: prof.id, ...prof.data() }
+                })
+            ))
     }, [])
 
 
@@ -135,6 +144,28 @@ const User = () => {
                     }}>Cerrar sesión</Button>
                     <Button color="red" rightIcon={<Trash />} onClick={() => setConfirmModal(true)}>Eliminar cuenta</Button>
                 </Group>
+                <h2>Profesores</h2>
+                {
+                    profesores.length > 0
+                        ?
+                        <SimpleGrid cols="4" m="md">
+                            {
+                                profesores.map((profe, idx) => {
+                                    return (
+                                        <Card key={idx}>
+                                            <Stack align="center" >
+                                                <Avatar size="xl" src={profe.photo}></Avatar>
+                                                <Text>{profe.name}</Text>
+                                            </Stack >
+                                        </Card>
+                                    )
+                                })
+                            }
+                        </SimpleGrid>
+                        :
+                        <Text>Tadavía no tienes ningún profesor</Text>
+                }
+
             </Stack>
         </ScrollArea>
     )

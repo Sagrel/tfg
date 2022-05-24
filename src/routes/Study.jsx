@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Book, Check, Notebook } from "tabler-icons-react";
 import { useState, useEffect, useContext } from "react";
 import { getAuth } from "firebase/auth";
-import { arrayUnion, collection, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
-import { isYesterday, Show, UserContext } from "../utils";
+import { arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
+import { createDeck, isYesterday, Show, UserContext } from "../utils";
+import { useNotifications } from "@mantine/notifications";
 
 const ProfesorLevel = ({ elem }) => {
 
@@ -137,6 +138,8 @@ const Study = () => {
 
     const user = getAuth().currentUser
 
+    const notifications = useNotifications()
+
     useEffect(async () => {
         const db = getFirestore();
         const userRef = doc(db, "users", user.uid);
@@ -223,14 +226,41 @@ const Study = () => {
                         setOpen(false)
                     }
                     }>Cancelar</Button>
-                    <Button color="green" disabled={seleccionados.length == 0} onClick={() => {
-                        const user = getAuth().currentUser
-                        const db = getFirestore();
-                        const userRef = doc(db, "users", user.uid);
-                        updateDoc(userRef, { alumnos: arrayUnion(...seleccionados) })
-                        setSeleccionados([])
-                        setOpen(false)
-                        // TODO give it all the decks
+                    <Button color="green" disabled={seleccionados.length == 0} onClick={async () => {
+                        try {
+                            const user = getAuth().currentUser
+                            const db = getFirestore();
+                            const userRef = doc(db, "users", user.uid);
+                            updateDoc(userRef, { alumnos: arrayUnion(...seleccionados) })
+                            setSeleccionados([])
+                            setOpen(false)
+
+                            await Promise.all(
+                                mazos.map(async mazo => {
+                                    const notes = (await getDocs(collection(db, "users", user.uid, "mazos", mazo.id, "notas"))).docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                                    const cards = (await getDocs(collection(db, "users", user.uid, "mazos", mazo.id, "tarjetas"))).docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                                    const questions = (await getDocs(collection(db, "users", user.uid, "mazos", mazo.id, "preguntas"))).docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                                    return Promise.all(
+                                        seleccionados.map(async alumno => {
+                                            await updateDoc(doc(db, "users", alumno), { profesores: arrayUnion(user.uid) })
+
+                                            // HACK we override the data, that's not good, it removes the progress. I don't really know what to do in this case
+                                            if ((await getDoc(doc(db, "users", alumno, "mazos", mazo.id))).exists) {
+                                                await deleteDoc(doc(db, "users", alumno, "mazos", mazo.id))
+                                            }
+
+                                            return createDeck(mazo.title ?? "", mazo.content ?? "", notes, cards, questions, alumno, mazo.id)
+                                        })
+                                    )
+                                })
+                            )
+                            setAlumnos(alumnos.filter(old => !seleccionados.includes(old)))
+                            notifications.showNotification({ color: "green", title: "Alumnos añadidos" })
+                        } catch (e) {
+                            console.error(e)
+                            notifications.showNotification({ color: "red", title: "Hemos encontrado un error" })
+                        }
+
                     }}>Añadir</Button>
                 </Group>
             </Modal>

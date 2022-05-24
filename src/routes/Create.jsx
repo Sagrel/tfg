@@ -182,7 +182,6 @@ const QuestionEditModal = ({ index, questions, close, setQuestions, setDeletedQu
 	)
 }
 
-
 const CardPreview = ({ name, setSelected }) => {
 	return (
 		<Card onClick={setSelected} style={{ cursor: "pointer" }}>

@@ -70,10 +70,12 @@ const Students = () => {
 					:
 					<SimpleGrid cols="4" m="md">
 						{
-							alumnos.map((alumnno, idx) => {
+							alumnos.map((alumno, idx) => {
 								return (
-									<StudentPreview {...alumnno} remove={() => setAlumnos(old => {
+									<StudentPreview key={alumno.id} {...alumno} remove={() => setAlumnos(old => {
 										old.splice(idx, 1)
+										updateDoc(doc(getFirestore(), "users", alumno.id), { profesores: arrayRemove(getAuth().currentUser.uid) })
+
 										return [...old]
 									})} />
 								)
