@@ -75,7 +75,10 @@ const Content = () => {
       })
 
       setIsProfesor(userData.profesor)
-
+      if (userData.profesor) {
+        // Si es un profesor no nos interesa controlar su racha de dias
+        return
+      }
       const last = new Date(userDoc.data().lastSignInTime) ?? new Date(user.metadata.lastSignInTime) ?? new Date()
 
       const today = new Date().toDateString()
