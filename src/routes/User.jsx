@@ -5,8 +5,9 @@ import { deleteUser, getAuth, updateProfile } from "firebase/auth";
 import { deleteDoc, doc, getDoc, getFirestore, increment, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react/cjs/react.production.min";
 import { Edit, Logout, Photo, Trash, Upload, X } from "tabler-icons-react";
-import { checkAchivement, handleImageUpload } from "../utils";
+import { checkAchivement, handleImageUpload, Show, UserContext } from "../utils";
 
 // TODO Add graphs with info on reviews, cards learned, had cards, ...
 // TODO Show titles
@@ -27,6 +28,8 @@ const User = () => {
     const [profesores, setProfesores] = useState([])
 
     const theme = useMantineTheme();
+
+    const isProfesor = useContext(UserContext)
 
     const navigate = useNavigate();
 
@@ -130,10 +133,6 @@ const User = () => {
                     <Avatar size="xl" src={originalImageUrl}></Avatar>
                     <h1>{originalUserName}</h1>
                 </Group>
-                <p>
-                    Aqui podriamos poner informacion como el número de palabras aprendidas,
-                    opciones para cambiar la contraseña o cualquier otra cosa relacionada con el usuario
-                </p>
                 <Group>
                     <Button rightIcon={<Edit />} onClick={() => {
                         setEditModal(true)
@@ -144,27 +143,29 @@ const User = () => {
                     }}>Cerrar sesión</Button>
                     <Button color="red" rightIcon={<Trash />} onClick={() => setConfirmModal(true)}>Eliminar cuenta</Button>
                 </Group>
-                <h2>Profesores</h2>
-                {
-                    profesores.length > 0
-                        ?
-                        <SimpleGrid cols="4" m="md">
-                            {
-                                profesores.map((profe, idx) => {
-                                    return (
-                                        <Card key={idx}>
-                                            <Stack align="center" >
-                                                <Avatar size="xl" src={profe.photo}></Avatar>
-                                                <Text>{profe.name}</Text>
-                                            </Stack >
-                                        </Card>
-                                    )
-                                })
-                            }
-                        </SimpleGrid>
-                        :
-                        <Text>Tadavía no tienes ningún profesor</Text>
-                }
+                <Show condition={!isProfesor}>
+                    <h2>Profesores</h2>
+                    {
+                        profesores.length > 0
+                            ?
+                            <SimpleGrid cols="4" m="md">
+                                {
+                                    profesores.map((profe, idx) => {
+                                        return (
+                                            <Card key={idx}>
+                                                <Stack align="center" >
+                                                    <Avatar size="xl" src={profe.photo}></Avatar>
+                                                    <Text>{profe.name}</Text>
+                                                </Stack >
+                                            </Card>
+                                        )
+                                    })
+                                }
+                            </SimpleGrid>
+                            :
+                            <Text>Tadavía no tienes ningún profesor</Text>
+                    }
+                </Show>
 
             </Stack>
         </ScrollArea>
