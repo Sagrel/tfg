@@ -66,7 +66,7 @@ export const checkAchivement = async (logro, notifications) => {
 	const userRef = doc(db, "users", user.uid)
 	const userData = (await getDoc(userRef)).data()
 	const lvl = defaultAchivements[logro].milestones.findIndex((x) => x == userData[logro])
-	if (lvl != -1) {
+	if (!userData.profesor && lvl != -1) {
 		notifications.showNotification({
 			title: `Logro conseguido: ${logro}`,
 			message: `Has alcanzado el nivel ${lvl + 1}`,
