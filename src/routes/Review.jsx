@@ -117,7 +117,20 @@ const Review = () => {
 			const db = getFirestore()
 			const user = getAuth().currentUser
 			const cardRef = doc(db, "users", user.uid, "mazos", cards[0].mazoId, "tarjetas", cards[0].uid)
-			updateDoc(cardRef, cleanObject({ "due date": newDueDate.toDateString(), "interval": newInterval, "failed": failed }))
+			const resultado = failed
+				?
+				"nFallos"
+				:
+				time_passed_percentage > 66
+					?
+					"nFacil"
+					: time_passed_percentage > 33
+						?
+						"nOk"
+						:
+						"nDificil"
+
+			updateDoc(cardRef, cleanObject({ "due date": newDueDate.toDateString(), "interval": newInterval, "failed": failed, [resultado]: increment(1) }))
 		}
 
 		const incrementLearned = async () => {

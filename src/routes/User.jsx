@@ -1,16 +1,220 @@
-import { Avatar, Button, Group, ScrollArea, Text, Stack, Modal, TextInput, useMantineTheme, Card, SimpleGrid } from "@mantine/core";
+import { useTheme } from "@emotion/react";
+import { Avatar, Button, Group, ScrollArea, Text, Stack, Modal, TextInput, useMantineTheme, Card, SimpleGrid, Grid, RingProgress, Box, Center, Tooltip } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useNotifications } from "@mantine/notifications";
-import { deleteUser, getAuth, updateProfile } from "firebase/auth";
-import { deleteDoc, doc, getDoc, getFirestore, increment, updateDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { deleteUser, getAuth } from "firebase/auth";
+import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, increment, updateDoc } from "firebase/firestore";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react/cjs/react.production.min";
 import { Edit, Logout, Photo, Trash, Upload, X } from "tabler-icons-react";
 import { checkAchivement, handleImageUpload, Show, UserContext } from "../utils";
+import { getTitle, useAchivements } from "./Achivements";
 
-// TODO Add graphs with info on reviews, cards learned, had cards, ...
-// TODO Show titles
+export const useEstadisticasAlumno = (id) => {
+    const [cardStats, setCardStats] = useState(null)
+
+    useEffect(async () => {
+        const db = getFirestore()
+
+        const mazosRef = collection(db, "users", id, "mazos");
+        const mazos = await getDocs(mazosRef);
+
+        const infoMazos = await Promise.all(mazos.docs.map(async (mazo) => {
+
+            const tarjetasRef = collection(db, "users", id, "mazos", mazo.id, "tarjetas");
+            const tarjetas = (await getDocs(tarjetasRef)).docs.map(doc => doc.data())
+
+            const total = tarjetas.length
+            const tarjetasEnAprendizaje = tarjetas.filter(t => t["due date"])
+
+            const nuevas = total - tarjetasEnAprendizaje.length
+            const fallidas = tarjetasEnAprendizaje.filter(t => t["failed"]).length
+
+            const nFacil = tarjetas.map(t => t.nFacil ?? 0).reduce((a, b) => a + b, 0)
+            const nOk = tarjetas.map(t => t.nOk ?? 0).reduce((a, b) => a + b, 0)
+            const nDificil = tarjetas.map(t => t.nDificil ?? 0).reduce((a, b) => a + b, 0)
+            const nFallos = tarjetas.map(t => t.nFallos ?? 0).reduce((a, b) => a + b, 0)
+
+            // if intervalo < 30 { aprendiendo } else { madura } 
+            const aprendiendo = tarjetasEnAprendizaje.filter(t => t["interval"] < 30).length
+            const maduras = tarjetasEnAprendizaje.length - aprendiendo
+
+
+            return { total, nuevas, fallidas, aprendiendo, maduras, nFacil, nOk, nDificil, nFallos }
+        }))
+        const data = infoMazos
+            .reduce(
+                (a, b) => ({
+                    total: a.total + b.total,
+                    nuevas: a.nuevas + b.nuevas,
+                    fallidas: a.fallidas + b.fallidas,
+                    aprendiendo: a.aprendiendo + b.aprendiendo,
+                    maduras: a.maduras + b.maduras,
+                    nFacil: a.nFacil + b.nFacil,
+                    nOk: a.nOk + b.nOk,
+                    nDificil: a.nDificil + b.nDificil,
+                    nFallos: a.nFallos + b.nFallos,
+                    nTotal: a.nTotal + b.nFacil + b.nOk + b.nDificil + b.nFallos
+                })
+                , { total: 0, nuevas: 0, fallidas: 0, aprendiendo: 0, maduras: 0, nFacil: 0, nOk: 0, nDificil: 0, nFallos: 0, nTotal: 0 }
+            )
+        setCardStats(
+            {
+                ...data,
+                nuevasPorcentaje: ((data.nuevas / data.total) * 100),
+                fallidasPorcentaje: ((data.fallidas / data.total) * 100),
+                aprendiendoPorcentaje: ((data.aprendiendo / data.total) * 100),
+                madurasPorcentaje: ((data.maduras / data.total) * 100),
+                nFacilPorcentaje: ((data.nFacil / data.nTotal) * 100),
+                nOkPorcentaje: ((data.nOk / data.nTotal) * 100),
+                nDificilPorcentaje: ((data.nDificil / data.nTotal) * 100),
+                nFallosPorcentaje: ((data.nFallos / data.nTotal) * 100)
+            }
+        )
+    }
+        , [])
+
+    return cardStats;
+}
+
+export const UserStats = ({ profesores, achivements, cardStats }) => {
+    return <Stack>
+        <h2>Profesores</h2>
+        {
+            profesores.length > 0
+                ?
+                <SimpleGrid cols="4" m="md">
+                    {
+                        profesores.map((profe, idx) => {
+                            return (
+                                <Card key={idx}>
+                                    <Stack align="center" >
+                                        <Avatar size="xl" src={profe.photo}></Avatar>
+                                        <Text>{profe.name}</Text>
+                                    </Stack >
+                                </Card>
+                            )
+                        })
+                    }
+                </SimpleGrid>
+                :
+                <Text>No hay ningun profesor</Text>
+        }
+        <h2>Estadisticas</h2>
+        <Card>
+            <h3>Titulos conseguidos</h3>
+            <SimpleGrid cols={4}>
+                {
+                    Object.keys(achivements).map(name => <Text key={name}>{getTitle(name, achivements[name].milestones, achivements[name].progress)[0]}</Text>)
+                }
+            </SimpleGrid>
+        </Card>
+        <Group grow>
+            <Card>
+                <Center>
+                    <Tooltip
+                        label="El numero de tarjetas organizadas por su grado de retención"
+                        withArrow
+                    >
+                        <h3>Conteo de tarjetas</h3>
+                    </Tooltip>
+                </Center>
+                {cardStats &&
+
+                    <Group position="center" style={{ width: "100%" }}>
+                        <RingProgress sections={
+                            [
+                                { value: cardStats.nuevasPorcentaje, color: "blue" },
+                                { value: cardStats.fallidasPorcentaje, color: "red" },
+                                { value: cardStats.aprendiendoPorcentaje, color: "yellow" },
+                                { value: cardStats.madurasPorcentaje, color: "green" }
+                            ]
+                        } />
+                        <Stack>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.blue, height: "1em", width: "1em" })} />
+                                <Text>Nuevas: {cardStats.nuevas} {cardStats.nuevasPorcentaje.toFixed(2)}%</Text>
+                            </Group>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.red, height: "1em", width: "1em" })} />
+                                <Text>Reaprendiendo: {cardStats.fallidas} {cardStats.fallidasPorcentaje.toFixed(2)}% </Text>
+                            </Group>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.yellow, height: "1em", width: "1em" })} />
+                                <Text>Aprendiendo: {cardStats.aprendiendo} {cardStats.aprendiendoPorcentaje.toFixed(2)}%</Text>
+                            </Group>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.green, height: "1em", width: "1em" })} />
+                                <Text>Maduras: {cardStats.maduras} {cardStats.madurasPorcentaje.toFixed(2)}%</Text>
+                            </Group>
+                        </Stack>
+                    </Group>
+                }
+            </Card>
+            <Card>
+                <Center>
+                    <Tooltip
+                        label="El numero respuestas organizadas por la velocidad de respuesta"
+                        withArrow
+                    >
+                        <h3>Facilidad de tarjetas</h3>
+                    </Tooltip>
+                </Center>
+                {cardStats &&
+
+                    <Group position="center" style={{ width: "100%" }}>
+                        <RingProgress sections={
+                            [
+                                { value: cardStats.nFacilPorcentaje, color: "green" },
+                                { value: cardStats.nOkPorcentaje, color: "blue" },
+                                { value: cardStats.nDificilPorcentaje, color: "yellow" },
+                                { value: cardStats.nFallosPorcentaje, color: "red" }
+                            ]
+                        } />
+                        <Stack>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.green, height: "1em", width: "1em" })} />
+                                <Text>Facil: {cardStats.nFacil} {cardStats.nFacilPorcentaje.toFixed(2)}%</Text>
+                            </Group>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.blue, height: "1em", width: "1em" })} />
+                                <Text>Bien: {cardStats.nOk} {cardStats.nOkPorcentaje.toFixed(2)}% </Text>
+                            </Group>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.yellow, height: "1em", width: "1em" })} />
+                                <Text>Dificil: {cardStats.nDificil} {cardStats.nDificilPorcentaje.toFixed(2)}%</Text>
+                            </Group>
+                            <Group >
+                                <Box sx={(theme) => ({ background: theme.colors.red, height: "1em", width: "1em" })} />
+                                <Text>Mal: {cardStats.nFallos} {cardStats.nFallosPorcentaje.toFixed(2)}%</Text>
+                            </Group>
+                        </Stack>
+                    </Group>
+                }
+            </Card>
+        </Group>
+    </Stack>
+}
+
+export const useProfesores = (id) => {
+    const [profesores, setProfesores] = useState([])
+
+    useEffect(async () => {
+        const db = getFirestore()
+        const userRef = doc(db, "users", id)
+        const userData = (await getDoc(userRef)).data()
+        setProfesores(
+            await Promise.all(
+                (userData.profesores ?? []).map(async profesorId => {
+                    const prof = await getDoc(doc(db, "users", profesorId))
+                    return { id: prof.id, ...prof.data() }
+                })
+            ))
+    }, [])
+
+    return profesores
+}
+
 const User = () => {
     const notifications = useNotifications();
     const user = getAuth().currentUser;
@@ -25,13 +229,13 @@ const User = () => {
 
     const [loading, setLoading] = useState(false)
 
-    const [profesores, setProfesores] = useState([])
 
     const theme = useMantineTheme();
 
     const isProfesor = useContext(UserContext)
 
     const navigate = useNavigate();
+
 
     useEffect(async () => {
         const db = getFirestore()
@@ -43,15 +247,13 @@ const User = () => {
         setOriginalUserName(userData.name)
         setImageUrl(userData.photo)
         setOriginalImageUrl(userData.photo)
-        setProfesores(
-            await Promise.all(
-                (userData.profesores ?? []).map(async profesorId => {
-                    const prof = await getDoc(doc(db, "users", profesorId))
-                    return { id: prof.id, ...prof.data() }
-                })
-            ))
     }, [])
 
+    const myID = getAuth().currentUser.uid
+
+    const achivements = useAchivements(myID)
+    const cardStats = useEstadisticasAlumno(myID)
+    const profesores = useProfesores(myID)
 
     return (
         <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
@@ -144,31 +346,10 @@ const User = () => {
                     <Button color="red" rightIcon={<Trash />} onClick={() => setConfirmModal(true)}>Eliminar cuenta</Button>
                 </Group>
                 <Show condition={!isProfesor}>
-                    <h2>Profesores</h2>
-                    {
-                        profesores.length > 0
-                            ?
-                            <SimpleGrid cols="4" m="md">
-                                {
-                                    profesores.map((profe, idx) => {
-                                        return (
-                                            <Card key={idx}>
-                                                <Stack align="center" >
-                                                    <Avatar size="xl" src={profe.photo}></Avatar>
-                                                    <Text>{profe.name}</Text>
-                                                </Stack >
-                                            </Card>
-                                        )
-                                    })
-                                }
-                            </SimpleGrid>
-                            :
-                            <Text>Tadavía no tienes ningún profesor</Text>
-                    }
+                    <UserStats achivements={achivements} cardStats={cardStats} profesores={profesores} />
                 </Show>
-
-            </Stack>
-        </ScrollArea>
+            </Stack >
+        </ScrollArea >
     )
 }
 

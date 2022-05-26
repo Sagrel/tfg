@@ -1,12 +1,21 @@
-import { Avatar, Button, Card, Center, Popover, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Avatar, Button, Card, Center, Modal, Popover, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
 import { getAuth } from "firebase/auth";
 import { arrayRemove, doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { useAchivements } from "./Achivements";
+import { useEstadisticasAlumno, useProfesores, UserStats } from "./User";
 
 const StudentPreview = ({ id, photo, name, remove }) => {
 	const [opened, setOpened] = useState(false)
+	const [modal, setModal] = useState(false)
+	const achivements = useAchivements(id)
+	const cardStats = useEstadisticasAlumno(id)
+	const profesores = useProfesores(id)
 	return (
 		<Card key={id} onClick={() => setOpened((o) => !o)} style={{ cursor: "pointer" }}>
+			<Modal size="xl3" opened={modal} onClose={() => setModal(false)}>
+				<UserStats achivements={achivements} cardStats={cardStats} profesores={profesores} />
+			</Modal>
 			<Center >
 				<Popover
 					opened={opened}
@@ -22,8 +31,7 @@ const StudentPreview = ({ id, photo, name, remove }) => {
 					withArrow
 				>
 					<Stack>
-						{ /* TODO make this do something useful */}
-						<Button onClick={() => { navigate("teoria/") }}>Ver progreso</Button>
+						<Button onClick={() => setModal(true)}>Ver progreso</Button>
 						<Button color="red" onClick={() => {
 							const user = getAuth().currentUser
 							const db = getFirestore();

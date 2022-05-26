@@ -7,13 +7,12 @@ import { defaultAchivements } from "../utils"
 
 
 const Achivement = ({ name, logro, milestones, progress }) => {
-    const active = milestones.findIndex((puntos) => puntos > progress)
-    const nivel = active == -1 ? milestones.length : active;
+    const [title, active] = getTitle(name, milestones, progress)
     const target = milestones[active]
 
     return (
         <Stack justify="center" align="center">
-            <h2>{name + " Lvl." + (nivel == milestones.length ? "Max" : nivel)}</h2>
+            <h2>{title}</h2>
             <RingProgress
                 roundCaps
                 sections={[{ value: (progress / target) * 100, color: active == -1 ? "yellow" : "teal" }]}
@@ -33,13 +32,18 @@ const Achivement = ({ name, logro, milestones, progress }) => {
     )
 }
 
-const Achivements = () => {
+export const getTitle = (name, milestones, progress) => {
+    const active = milestones.findIndex((puntos) => puntos > progress)
+    const nivel = active == -1 ? milestones.length : active;
+    return [name + " Lvl." + (nivel == milestones.length ? "Max" : nivel), active]
+}
 
+export const useAchivements = (id) => {
     const [achivements, setAchivements] = useState(defaultAchivements)
 
     useEffect(async () => {
         const db = getFirestore();
-        const userRef = doc(db, "users", getAuth().currentUser.uid);
+        const userRef = doc(db, "users", id);
         const user_data = await (await getDoc(userRef)).data();
 
         defaultAchivements.Tenaz.progress = user_data.Tenaz ?? 0
@@ -52,9 +56,15 @@ const Achivements = () => {
         defaultAchivements.Terminator.progress = user_data.Terminator ?? 0
         defaultAchivements["Estudiante modelo"].progress = user_data["Estudiante modelo"] ?? 0
         defaultAchivements.Empollon.progress = user_data.Empollon ?? 0
-        setAchivements({ ...defaultAchivements})
+        setAchivements({ ...defaultAchivements })
     }, [])
 
+    return achivements
+}
+
+const Achivements = () => {
+
+    const achivements = useAchivements(getAuth().currentUser.uid)
 
     return (
         <ScrollArea style={{ height: "100vh", width: "80vw" }} type="never">
