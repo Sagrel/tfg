@@ -10,190 +10,212 @@ import { Edit, Logout, Photo, Trash, Upload, X } from "tabler-icons-react";
 import { checkAchivement, handleImageUpload, Show, UserContext } from "../utils";
 import { getTitle, useAchivements } from "./Achivements";
 
+const getDatosMazo = async (userId, mazoId) => {
+    const db = getFirestore()
+
+    const tarjetasRef = collection(db, "users", userId, "mazos", mazoId, "tarjetas");
+    const tarjetas = (await getDocs(tarjetasRef)).docs.map(doc => doc.data())
+
+    const total = tarjetas.length
+    const tarjetasEnAprendizaje = tarjetas.filter(t => t["due date"])
+
+    const nuevas = total - tarjetasEnAprendizaje.length
+    const fallidas = tarjetasEnAprendizaje.filter(t => t["failed"]).length
+
+    const nFacil = tarjetas.map(t => t.nFacil ?? 0).reduce((a, b) => a + b, 0)
+    const nOk = tarjetas.map(t => t.nOk ?? 0).reduce((a, b) => a + b, 0)
+    const nDificil = tarjetas.map(t => t.nDificil ?? 0).reduce((a, b) => a + b, 0)
+    const nFallos = tarjetas.map(t => t.nFallos ?? 0).reduce((a, b) => a + b, 0)
+
+    // if intervalo < 30 { aprendiendo } else { madura } 
+    const aprendiendo = tarjetasEnAprendizaje.filter(t => t["interval"] < 30).length
+    const maduras = tarjetasEnAprendizaje.length - aprendiendo
+
+    const nTotal = nFacil + nOk + nDificil + nFallos
+
+    return { total, nuevas, fallidas, aprendiendo, maduras, nFacil, nOk, nDificil, nFallos, nTotal }
+}
+
+export const getEstadisticas = async (userId, mazosId) => {
+    const db = getFirestore()
+
+    const mazosRef = collection(db, "users", userId, "mazos");
+    let mazos = await getDocs(mazosRef);
+
+    if (mazosId) {
+        mazos = mazos.docs.filter((mazo) => mazosId.includes(mazo.id))
+    } else {
+        mazos = mazos.docs
+    }
+
+    const infoMazos = await Promise.all(mazos.map(async (mazo) => getDatosMazo(userId, mazo.id)))
+    const data = infoMazos
+        .reduce(
+            (a, b) => ({
+                total: a.total + b.total,
+                nuevas: a.nuevas + b.nuevas,
+                fallidas: a.fallidas + b.fallidas,
+                aprendiendo: a.aprendiendo + b.aprendiendo,
+                maduras: a.maduras + b.maduras,
+                nFacil: a.nFacil + b.nFacil,
+                nOk: a.nOk + b.nOk,
+                nDificil: a.nDificil + b.nDificil,
+                nFallos: a.nFallos + b.nFallos,
+                nTotal: a.nTotal + b.nTotal
+            })
+            , { total: 0, nuevas: 0, fallidas: 0, aprendiendo: 0, maduras: 0, nFacil: 0, nOk: 0, nDificil: 0, nFallos: 0, nTotal: 0 }
+        )
+    return {
+        ...data,
+        nuevasPorcentaje: ((data.nuevas / data.total) * 100) ?? 0,
+        fallidasPorcentaje: ((data.fallidas / data.total) * 100) ?? 0,
+        aprendiendoPorcentaje: ((data.aprendiendo / data.total) * 100) ?? 0,
+        madurasPorcentaje: ((data.maduras / data.total) * 100) ?? 0,
+        nFacilPorcentaje: ((data.nFacil / data.nTotal) * 100) ?? 0,
+        nOkPorcentaje: ((data.nOk / data.nTotal) * 100) ?? 0,
+        nDificilPorcentaje: ((data.nDificil / data.nTotal) * 100) ?? 0,
+        nFallosPorcentaje: ((data.nFallos / data.nTotal) * 100) ?? 0
+    }
+
+}
+
+
 export const useEstadisticasAlumno = (id) => {
     const [cardStats, setCardStats] = useState(null)
 
-    useEffect(async () => {
-        const db = getFirestore()
-
-        const mazosRef = collection(db, "users", id, "mazos");
-        const mazos = await getDocs(mazosRef);
-
-        const infoMazos = await Promise.all(mazos.docs.map(async (mazo) => {
-
-            const tarjetasRef = collection(db, "users", id, "mazos", mazo.id, "tarjetas");
-            const tarjetas = (await getDocs(tarjetasRef)).docs.map(doc => doc.data())
-
-            const total = tarjetas.length
-            const tarjetasEnAprendizaje = tarjetas.filter(t => t["due date"])
-
-            const nuevas = total - tarjetasEnAprendizaje.length
-            const fallidas = tarjetasEnAprendizaje.filter(t => t["failed"]).length
-
-            const nFacil = tarjetas.map(t => t.nFacil ?? 0).reduce((a, b) => a + b, 0)
-            const nOk = tarjetas.map(t => t.nOk ?? 0).reduce((a, b) => a + b, 0)
-            const nDificil = tarjetas.map(t => t.nDificil ?? 0).reduce((a, b) => a + b, 0)
-            const nFallos = tarjetas.map(t => t.nFallos ?? 0).reduce((a, b) => a + b, 0)
-
-            // if intervalo < 30 { aprendiendo } else { madura } 
-            const aprendiendo = tarjetasEnAprendizaje.filter(t => t["interval"] < 30).length
-            const maduras = tarjetasEnAprendizaje.length - aprendiendo
-
-
-            return { total, nuevas, fallidas, aprendiendo, maduras, nFacil, nOk, nDificil, nFallos }
-        }))
-        const data = infoMazos
-            .reduce(
-                (a, b) => ({
-                    total: a.total + b.total,
-                    nuevas: a.nuevas + b.nuevas,
-                    fallidas: a.fallidas + b.fallidas,
-                    aprendiendo: a.aprendiendo + b.aprendiendo,
-                    maduras: a.maduras + b.maduras,
-                    nFacil: a.nFacil + b.nFacil,
-                    nOk: a.nOk + b.nOk,
-                    nDificil: a.nDificil + b.nDificil,
-                    nFallos: a.nFallos + b.nFallos,
-                    nTotal: a.nTotal + b.nFacil + b.nOk + b.nDificil + b.nFallos
-                })
-                , { total: 0, nuevas: 0, fallidas: 0, aprendiendo: 0, maduras: 0, nFacil: 0, nOk: 0, nDificil: 0, nFallos: 0, nTotal: 0 }
-            )
-        setCardStats(
-            {
-                ...data,
-                nuevasPorcentaje: ((data.nuevas / data.total) * 100),
-                fallidasPorcentaje: ((data.fallidas / data.total) * 100),
-                aprendiendoPorcentaje: ((data.aprendiendo / data.total) * 100),
-                madurasPorcentaje: ((data.maduras / data.total) * 100),
-                nFacilPorcentaje: ((data.nFacil / data.nTotal) * 100),
-                nOkPorcentaje: ((data.nOk / data.nTotal) * 100),
-                nDificilPorcentaje: ((data.nDificil / data.nTotal) * 100),
-                nFallosPorcentaje: ((data.nFallos / data.nTotal) * 100)
-            }
-        )
-    }
-        , [])
+    useEffect(async () => setCardStats(await getEstadisticas(id)), [])
 
     return cardStats;
 }
 
 export const UserStats = ({ profesores, achivements, cardStats }) => {
     return <Stack>
-        <h2>Profesores</h2>
         {
-            profesores.length > 0
-                ?
-                <SimpleGrid cols="4" m="md">
-                    {
-                        profesores.map((profe, idx) => {
-                            return (
-                                <Card key={idx}>
-                                    <Stack align="center" >
-                                        <Avatar size="xl" src={profe.photo}></Avatar>
-                                        <Text>{profe.name}</Text>
-                                    </Stack >
-                                </Card>
-                            )
-                        })
-                    }
-                </SimpleGrid>
-                :
-                <Text>No hay ningun profesor</Text>
+            profesores &&
+            <>
+                <h2>Profesores</h2>
+                {
+                    profesores.length > 0
+                        ?
+                        <SimpleGrid cols="4" m="md">
+                            {
+                                profesores.map((profe, idx) => {
+                                    return (
+                                        <Card key={idx}>
+                                            <Stack align="center" >
+                                                <Avatar size="xl" src={profe.photo}></Avatar>
+                                                <Text>{profe.name}</Text>
+                                            </Stack >
+                                        </Card>
+                                    )
+                                })
+                            }
+                        </SimpleGrid>
+                        :
+                        <Text>No hay ningun profesor</Text>
+                }
+            </>
         }
         <h2>Estadisticas</h2>
-        <Card>
-            <h3>Titulos conseguidos</h3>
-            <SimpleGrid cols={4}>
-                {
-                    Object.keys(achivements).map(name => <Text key={name}>{getTitle(name, achivements[name].milestones, achivements[name].progress)[0]}</Text>)
-                }
-            </SimpleGrid>
-        </Card>
-        <Group grow>
+        {
+            achivements &&
+
             <Card>
-                <Center>
-                    <Tooltip
-                        label="El numero de tarjetas organizadas por su grado de retención"
-                        withArrow
-                    >
-                        <h3>Conteo de tarjetas</h3>
-                    </Tooltip>
-                </Center>
-                {cardStats &&
+                <h3>Titulos conseguidos</h3>
+                <SimpleGrid cols={4}>
+                    {
+                        Object.keys(achivements).map(name => <Text key={name}>{getTitle(name, achivements[name].milestones, achivements[name].progress)[0]}</Text>)
+                    }
+                </SimpleGrid>
+            </Card>
+        }
+        {
+            cardStats &&
+
+            <Group grow>
+                <Card>
+                    <Center>
+                        <Tooltip
+                            label="El numero de tarjetas organizadas por su grado de retención"
+                            withArrow
+                        >
+                            <h3>Conteo de tarjetas</h3>
+                        </Tooltip>
+                    </Center>
 
                     <Group position="center" style={{ width: "100%" }}>
                         <RingProgress sections={
                             [
-                                { value: cardStats.nuevasPorcentaje, color: "blue" },
-                                { value: cardStats.fallidasPorcentaje, color: "red" },
-                                { value: cardStats.aprendiendoPorcentaje, color: "yellow" },
-                                { value: cardStats.madurasPorcentaje, color: "green" }
+                                { value: cardStats.nuevasPorcentaje ?? 0, color: "blue" },
+                                { value: cardStats.fallidasPorcentaje ?? 0, color: "red" },
+                                { value: cardStats.aprendiendoPorcentaje ?? 0, color: "yellow" },
+                                { value: cardStats.madurasPorcentaje ?? 0, color: "green" }
                             ]
                         } />
                         <Stack>
                             <Group >
                                 <Box sx={(theme) => ({ background: theme.colors.blue, height: "1em", width: "1em" })} />
-                                <Text>Nuevas: {cardStats.nuevas} {cardStats.nuevasPorcentaje.toFixed(2)}%</Text>
+                                <Text>Nuevas: {cardStats.nuevas} {(cardStats.nuevasPorcentaje ?? 0).toFixed(2)}%</Text>
                             </Group>
                             <Group >
                                 <Box sx={(theme) => ({ background: theme.colors.red, height: "1em", width: "1em" })} />
-                                <Text>Reaprendiendo: {cardStats.fallidas} {cardStats.fallidasPorcentaje.toFixed(2)}% </Text>
+                                <Text>Reaprendiendo: {cardStats.fallidas} {(cardStats.fallidasPorcentaje ?? 0).toFixed(2)}% </Text>
                             </Group>
                             <Group >
                                 <Box sx={(theme) => ({ background: theme.colors.yellow, height: "1em", width: "1em" })} />
-                                <Text>Aprendiendo: {cardStats.aprendiendo} {cardStats.aprendiendoPorcentaje.toFixed(2)}%</Text>
+                                <Text>Aprendiendo: {cardStats.aprendiendo} {(cardStats.aprendiendoPorcentaje ?? 0).toFixed(2)}%</Text>
                             </Group>
                             <Group >
                                 <Box sx={(theme) => ({ background: theme.colors.green, height: "1em", width: "1em" })} />
-                                <Text>Maduras: {cardStats.maduras} {cardStats.madurasPorcentaje.toFixed(2)}%</Text>
+                                <Text>Maduras: {cardStats.maduras} {(cardStats.madurasPorcentaje ?? 0).toFixed(2)}%</Text>
                             </Group>
                         </Stack>
                     </Group>
-                }
-            </Card>
-            <Card>
-                <Center>
-                    <Tooltip
-                        label="El numero respuestas organizadas por la velocidad de respuesta"
-                        withArrow
-                    >
-                        <h3>Facilidad de tarjetas</h3>
-                    </Tooltip>
-                </Center>
-                {cardStats &&
 
+                </Card>
+                <Card>
+                    <Center>
+                        <Tooltip
+                            label="El numero respuestas organizadas por la velocidad de respuesta"
+                            withArrow
+                        >
+                            <h3>Facilidad de tarjetas</h3>
+                        </Tooltip>
+                    </Center>
                     <Group position="center" style={{ width: "100%" }}>
                         <RingProgress sections={
                             [
-                                { value: cardStats.nFacilPorcentaje, color: "green" },
-                                { value: cardStats.nOkPorcentaje, color: "blue" },
-                                { value: cardStats.nDificilPorcentaje, color: "yellow" },
-                                { value: cardStats.nFallosPorcentaje, color: "red" }
+                                { value: cardStats.nFacilPorcentaje ?? 0, color: "green" },
+                                { value: cardStats.nOkPorcentaje ?? 0, color: "blue" },
+                                { value: cardStats.nDificilPorcentaje ?? 0, color: "yellow" },
+                                { value: cardStats.nFallosPorcentaje ?? 0, color: "red" }
                             ]
                         } />
                         <Stack>
-                            <Group >
+                                <Group >
+                                    { /* FIXME aqui aveces salen NaN % */}
                                 <Box sx={(theme) => ({ background: theme.colors.green, height: "1em", width: "1em" })} />
-                                <Text>Facil: {cardStats.nFacil} {cardStats.nFacilPorcentaje.toFixed(2)}%</Text>
+                                <Text>Facil: {cardStats.nFacil} {(cardStats.nFacilPorcentaje ?? 0).toFixed(2)}%</Text>
                             </Group>
                             <Group >
                                 <Box sx={(theme) => ({ background: theme.colors.blue, height: "1em", width: "1em" })} />
-                                <Text>Bien: {cardStats.nOk} {cardStats.nOkPorcentaje.toFixed(2)}% </Text>
+                                <Text>Bien: {cardStats.nOk} {(cardStats.nOkPorcentaje ?? 0).toFixed(2)}% </Text>
                             </Group>
                             <Group >
                                 <Box sx={(theme) => ({ background: theme.colors.yellow, height: "1em", width: "1em" })} />
-                                <Text>Dificil: {cardStats.nDificil} {cardStats.nDificilPorcentaje.toFixed(2)}%</Text>
+                                <Text>Dificil: {cardStats.nDificil} {(cardStats.nDificilPorcentaje ?? 0).toFixed(2)}%</Text>
                             </Group>
                             <Group >
                                 <Box sx={(theme) => ({ background: theme.colors.red, height: "1em", width: "1em" })} />
-                                <Text>Mal: {cardStats.nFallos} {cardStats.nFallosPorcentaje.toFixed(2)}%</Text>
+                                <Text>Mal: {cardStats.nFallos} {(cardStats.nFallosPorcentaje ?? 0).toFixed(2)}%</Text>
                             </Group>
                         </Stack>
                     </Group>
-                }
-            </Card>
-        </Group>
-    </Stack>
+
+                </Card>
+            </Group>
+        }
+    </Stack >
 }
 
 export const useProfesores = (id) => {

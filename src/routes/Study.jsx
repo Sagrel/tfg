@@ -1,11 +1,12 @@
 import { Avatar, Button, Card, Center, Group, Modal, Popover, RingProgress, ScrollArea, SimpleGrid, Stack, Text, TextInput, ThemeIcon } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import { Book, Check, Notebook } from "tabler-icons-react";
+import { Check, Notebook } from "tabler-icons-react";
 import { useState, useEffect, useContext } from "react";
 import { getAuth } from "firebase/auth";
 import { arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
-import { createDeck, isYesterday, Show, UserContext } from "../utils";
+import { createDeck, UserContext } from "../utils";
 import { useNotifications } from "@mantine/notifications";
+import { getEstadisticas, UserStats } from "./User";
 
 const ProfesorLevel = ({ elem }) => {
 
@@ -46,7 +47,7 @@ const ProfesorLevel = ({ elem }) => {
     )
 }
 
-const Level = ({ elem, canLearn }) => {
+const Level = ({ elem, canLearn, setStats }) => {
     const percentageLearning = Math.round((elem.aprendiendo - elem.pendientes) / elem.total * 100);
     const percentageFailed = Math.round(elem.fallidas / elem.total * 100);
     const percentagePending = Math.round((elem.pendientes - elem.fallidas) / elem.total * 100);
@@ -110,8 +111,12 @@ const Level = ({ elem, canLearn }) => {
             >
                 <Stack>
                     <Button disabled={elem.aprendiendo == elem.total || canLearn == 0} onClick={() => { navigate("review/" + elem.id) }}>Aprender nuevas</Button>
-                    <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
+                    <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
+                    <Button onClick={async () => {
+                        setStats(await getEstadisticas(getAuth().currentUser.uid, [elem.id]))
+                        setOpened(false)
+                    }}>Estadisticas</Button>
                     <Button disabled={elem.creador != getAuth().currentUser.uid} onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
                 </Stack>
             </Popover >
@@ -134,6 +139,7 @@ const Study = () => {
     const [alumnos, setAlumnos] = useState([])
     const [seleccionados, setSeleccionados] = useState([])
 
+    const [stats, setStats] = useState(null)
     const isProfesor = useContext(UserContext)
 
     const user = getAuth().currentUser
@@ -264,6 +270,9 @@ const Study = () => {
                     }}>Añadir</Button>
                 </Group>
             </Modal>
+            <Modal size="lg" opened={stats != null} onClose={() => setStats(null)} centered >
+                <UserStats cardStats={stats} />
+            </Modal>
             <Stack p="lg">
                 {
                     isProfesor ?
@@ -297,7 +306,7 @@ const Study = () => {
                             ?
                             mazos.map((elem, i) => <ProfesorLevel key={i} elem={elem} />)
                             :
-                            mazos.map((elem, i) => <Level key={i} elem={elem} canLearn={canLearn} />)
+                            mazos.map((elem, i) => <Level key={i} elem={elem} canLearn={canLearn} setStats={setStats} />)
                     }
                 </SimpleGrid>
             </Stack>
