@@ -6,9 +6,9 @@ import { getAuth } from "firebase/auth";
 import { arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
 import { createDeck, UserContext } from "../utils";
 import { useNotifications } from "@mantine/notifications";
-import { getEstadisticas, UserStats } from "./User";
+import { getEstadisticasAlumnosMazo, getEstadisticasUnMazo, UserStats } from "./User";
 
-const ProfesorLevel = ({ elem }) => {
+const ProfesorLevel = ({ elem, alumnos, setStats }) => {
 
     const [opened, setOpened] = useState(false);
     const navigate = useNavigate();
@@ -38,8 +38,10 @@ const ProfesorLevel = ({ elem }) => {
                 withArrow
             >
                 <Stack>
-                    { /* TODO make Estatisticas work */}
-                    <Button onClick={() => { navigate("create/" + elem.id) }}>Estadisticas</Button>
+                    <Button onClick={async () => {
+                        setStats(await getEstadisticasAlumnosMazo(alumnos, elem.id))
+                        setOpened(false)
+                    }}>Estadisticas</Button>
                     <Button onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
                 </Stack>
             </Popover >
@@ -114,7 +116,7 @@ const Level = ({ elem, canLearn, setStats }) => {
                     <Button onClick={() => { navigate("reading/" + elem.id) }}>Leer</Button>
                     <Button onClick={() => { navigate("teoria/" + elem.id) }}>Ver Notas</Button>
                     <Button onClick={async () => {
-                        setStats(await getEstadisticas(getAuth().currentUser.uid, [elem.id]))
+                        setStats(await getEstadisticasUnMazo(getAuth().currentUser.uid, elem.id))
                         setOpened(false)
                     }}>Estadisticas</Button>
                     <Button disabled={elem.creador != getAuth().currentUser.uid} onClick={() => { navigate("create/" + elem.id) }}>Editar</Button>
@@ -137,6 +139,7 @@ const Study = () => {
     const [open, setOpen] = useState(false)
     const [busqueda, setBusqueda] = useState("")
     const [alumnos, setAlumnos] = useState([])
+    const [misAlumnos, setMisAlumnos] = useState([])
     const [seleccionados, setSeleccionados] = useState([])
 
     const [stats, setStats] = useState(null)
@@ -156,8 +159,8 @@ const Study = () => {
         const mazos = await getDocs(mazosRef);
 
         if (isProfesor) {
-            const misAlumnos = userData.alumnos ?? []
-
+            let misAlumnos = userData.alumnos ?? []
+            setMisAlumnos(misAlumnos)
             const usersRef = collection(db, "users")
             const users = await getDocs(usersRef)
             setAlumnos(
@@ -304,8 +307,9 @@ const Study = () => {
                     {
                         isProfesor
                             ?
-                            mazos.map((elem, i) => <ProfesorLevel key={i} elem={elem} />)
+                            mazos.map((elem, i) => <ProfesorLevel key={i} elem={elem} alumnos={misAlumnos} setStats={setStats} />)
                             :
+                            // TODO group by creator with array.groupBy 
                             mazos.map((elem, i) => <Level key={i} elem={elem} canLearn={canLearn} setStats={setStats} />)
                     }
                 </SimpleGrid>

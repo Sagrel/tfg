@@ -1,5 +1,5 @@
-import { useTheme } from "@emotion/react";
-import { Avatar, Button, Group, ScrollArea, Text, Stack, Modal, TextInput, useMantineTheme, Card, SimpleGrid, Grid, RingProgress, Box, Center, Tooltip } from "@mantine/core";
+
+import { Avatar, Button, Group, ScrollArea, Text, Stack, Modal, TextInput, useMantineTheme, Card, SimpleGrid, RingProgress, Box, Center, Tooltip } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useNotifications } from "@mantine/notifications";
 import { deleteUser, getAuth } from "firebase/auth";
@@ -36,19 +36,7 @@ const getDatosMazo = async (userId, mazoId) => {
     return { total, nuevas, fallidas, aprendiendo, maduras, nFacil, nOk, nDificil, nFallos, nTotal }
 }
 
-export const getEstadisticas = async (userId, mazosId) => {
-    const db = getFirestore()
-
-    const mazosRef = collection(db, "users", userId, "mazos");
-    let mazos = await getDocs(mazosRef);
-
-    if (mazosId) {
-        mazos = mazos.docs.filter((mazo) => mazosId.includes(mazo.id))
-    } else {
-        mazos = mazos.docs
-    }
-
-    const infoMazos = await Promise.all(mazos.map(async (mazo) => getDatosMazo(userId, mazo.id)))
+const average = (infoMazos) => {
     const data = infoMazos
         .reduce(
             (a, b) => ({
@@ -76,6 +64,24 @@ export const getEstadisticas = async (userId, mazosId) => {
         nDificilPorcentaje: ((data.nDificil / data.nTotal) * 100) ?? 0,
         nFallosPorcentaje: ((data.nFallos / data.nTotal) * 100) ?? 0
     }
+}
+
+export const getEstadisticasAlumnosMazo = async (alumnosId, mazoId) => {
+    const infoMazos = await Promise.all(alumnosId.map(async (userId) => getDatosMazo(userId, mazoId)))
+
+    return average(infoMazos)
+}
+
+export const getEstadisticasUnMazo = async (userId, mazoId) => {
+    return average([await getDatosMazo(userId, mazoId)])
+}
+
+export const getEstadisticasTodosLosMazos = async (userId) => {
+
+    const mazos = await getDocs(collection(getFirestore(), "users", userId, "mazos"));
+
+    const infoMazos = await Promise.all(mazos.docs.map(async (mazo) => getDatosMazo(userId, mazo.id)))
+    return average(infoMazos)
 
 }
 
@@ -83,7 +89,7 @@ export const getEstadisticas = async (userId, mazosId) => {
 export const useEstadisticasAlumno = (id) => {
     const [cardStats, setCardStats] = useState(null)
 
-    useEffect(async () => setCardStats(await getEstadisticas(id)), [])
+    useEffect(async () => setCardStats(await getEstadisticasTodosLosMazos(id)), [])
 
     return cardStats;
 }
@@ -192,8 +198,8 @@ export const UserStats = ({ profesores, achivements, cardStats }) => {
                             ]
                         } />
                         <Stack>
-                                <Group >
-                                    { /* FIXME aqui aveces salen NaN % */}
+                            <Group >
+                                { /* FIXME aqui aveces salen NaN % */}
                                 <Box sx={(theme) => ({ background: theme.colors.green, height: "1em", width: "1em" })} />
                                 <Text>Facil: {cardStats.nFacil} {(cardStats.nFacilPorcentaje ?? 0).toFixed(2)}%</Text>
                             </Group>

@@ -11,8 +11,12 @@
 6. El usuario podrá repasar todas sus tarjetas de conocimiento pendientes.
 7. El usuario podrá ver sus estadisticas: 
    - Titulos
-   - Numero promedio de palabras por aprender, aprendiendo, maduras  
-   - Cantidad de veces que hace Easy, Ok, Hard, Fail                 
+   - Profesores
+   - Conteo de tarjetas
+   - Facilidad de tarjetas    
+8. El usuario podrá ver las estadisticas de un mazo: 
+   - Conteo de tarjetas
+   - Facilidad de tarjetas             
 
 
 # Requisitos de incorporación de contenidos 
@@ -41,10 +45,10 @@
 # Requisitos de monitorización del progreso
 1. Si el usuario tiene el rol de profesor podra añadir alumnos
 2. El profesor podrá eliminar alumnos
-3. El profesor podrá ver las estadisticas de un mazo // TODO
+3. El profesor podrá ver las estadisticas de un mazo 
    - Media de progreso de cada tarjeta
    - Media de acierto de cada tarjeta
-   - Media de acierto de cada pregunta
+   - Media de acierto de cada pregunta // TODO
 4. El profesor podrá ver las estadisticas de un alumno 
    - Titulos/Nivel de achivement del alumno
    - Media de progreso de cada tarjeta 
